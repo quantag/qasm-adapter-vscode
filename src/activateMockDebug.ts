@@ -163,7 +163,6 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
 		// if launch.json is missing or empty
 		if (!config.type && !config.request && !config.name) {
 			const editor = vscode.window.activeTextEditor;
-			if(editor) {console.log(editor.document.languageId);}
 			if (editor && editor.document.languageId === 'markdown') {
 				config.type = 'mock';
 				config.name = 'Launch';

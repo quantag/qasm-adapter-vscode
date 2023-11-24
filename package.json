@@ -21,10 +21,10 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-mock-debug.git"
+    "url": "https://github.com/quantag/qasm-adapter-vscode.git"
   },
   "bugs": {
-    "url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+    "url": "https://github.com/quantag/qasm-adapter-vscode/issues"
   },
   "scripts": {
     "compile": "tsc -p ./",
