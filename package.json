@@ -1,8 +1,8 @@
 {
-  "name": "mock-debug",
+  "name": "openqasm-debug",
   "displayName": "OpenQASM Debug",
   "version": "0.52.0",
-  "publisher": "ms-vscode",
+  "publisher": "quantag",
   "description": "Extension for OpenQASM debug adapters for VS Code.",
   "author": {
     "name": "Quantag IT Solutions"
@@ -78,23 +78,23 @@
       "editor/title/run": [
         {
           "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown",
+          "when": "resourceLangId == openqasm",
           "group": "navigation@1"
         },
         {
           "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown",
+          "when": "resourceLangId == openqasm",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
           "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown"
+          "when": "resourceLangId == openqasm"
         },
         {
           "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown"
+          "when": "resourceLangId == openqasm"
         }
       ],
       "debug/variables/context": [
@@ -126,16 +126,30 @@
     ],
     "breakpoints": [
       {
-        "language": "markdown"
+        "language": "openqasm"
       }
+    ],
+    "languages": [
+      {
+         "id": "openqasm",
+         "aliases": ["OpenQASM"],
+         "extensions": [".qasm"]
+      }
+   ],
+    "grammars": [
+     {
+        "language": "openqasm",
+        "scopeName": "source.openqasm",
+        "path": "./openqasm.tmLanguage.json"
+     }
     ],
     "debuggers": [
       {
         "type": "mock",
         "languages": [
-          "markdown"
+          "openqasm"
         ],
-        "label": "Mock Debug",
+        "label": "OpenQASM Debug",
         "program": "./out/debugAdapter.js",
         "runtime": "node",
         "configurationAttributes": {
@@ -223,8 +237,8 @@
         ],
         "configurationSnippets": [
           {
-            "label": "Mock Debug: Launch",
-            "description": "A new configuration for 'debugging' a user selected markdown file.",
+            "label": "OpenQASM Debug: Launch",
+            "description": "A new configuration for 'debugging' a user selected OpenQASM file.",
             "body": {
               "type": "mock",
               "request": "launch",

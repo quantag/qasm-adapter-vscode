@@ -103,9 +103,9 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}).listen(0);
 		}
 
-		// make VS Code connect to debug server
-		return new vscode.DebugAdapterServer( 5555 /*(this.server.address() as Net.AddressInfo).port*/);
-		// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+		// make VS Code connect to debug server /*(this.server.address() as Net.AddressInfo).port*/
+		return new vscode.DebugAdapterServer( 5555 /*, "cryspprod3.quantag-it.com"*/ );
+
 	}
 
 	dispose() {
