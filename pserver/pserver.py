@@ -2,8 +2,11 @@
 # (C) Quantag
 # Author: A.K.
 #
-# Json requests server
+# Json requests handling server
 #
+# Run following to get help for input arguments:
+# ./pserver.py --help
+# usage: pserver.py [-h] [-iport IPORT] [-oport OPORT] [-lhost LHOST] [-rhost RHOST]
 
 import os
 import sys
@@ -40,21 +43,18 @@ async def handle_message(message, websocket):
                     await websocket.send(json.dumps(response))
 
     except json.JSONDecodeError:
-        print("Invalid JSON format.")
+        logging.error("Invalid JSON format.")
 
 async def server(websocket, path):
-    print(f"Client connected from {websocket.remote_address}")
-    
+    logging.info(f"Client connected from {websocket.remote_address}")
     try:
         async for message in websocket:
             await handle_message(message, websocket)
-
     except websockets.ConnectionClosedError:
-        print(f"Connection closed by {websocket.remote_address}")
+        logging.info(f"Connection closed by {websocket.remote_address}")
 
 
 def main(iPort: int, oPort:int, Lhost: str, Rhost: str):
-
     logging.basicConfig(
         filename='pserver.log',
         format='%(asctime)s %(message)s',
