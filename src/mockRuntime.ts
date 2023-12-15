@@ -291,7 +291,6 @@ export class MockRuntime extends EventEmitter {
 	 * Returns a fake 'stacktrace' where every 'stackframe' is a word from the current line.
 	 */
 	public stack(startFrame: number, endFrame: number): IRuntimeStack {
-
 		const line = this.getLine();
 		const words = this.getWords(this.currentLine, line);
 		words.push({ name: 'BOTTOM', line: -1, index: -1 });	// add a sentinel so that the stack is never empty...
@@ -316,7 +315,6 @@ export class MockRuntime extends EventEmitter {
 
 			frames.push(stackFrame);
 		}
-
 		return {
 			frames: frames,
 			count: words.length
@@ -371,7 +369,6 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	public setDataBreakpoint(address: string, accessType: 'read' | 'write' | 'readWrite'): boolean {
-
 		const x = accessType === 'readWrite' ? 'read write' : accessType;
 
 		const t = this.breakAddresses.get(address);

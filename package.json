@@ -73,6 +73,9 @@
   "workspaceTrust": {
     "request": "never"
   },
+  "capabilities": {
+    "virtualWorkspaces": true
+  },
   "contributes": {
     "menus": {
       "editor/title/run": [

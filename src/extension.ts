@@ -62,13 +62,11 @@ export function deactivate() {
 }
 
 class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFactory {
-
 	// The following use of a DebugAdapter factory shows how to control what debug adapter executable is used.
 	// Since the code implements the default behavior, it is absolutely not neccessary and we show it here only for educational purpose.
 
 	createDebugAdapterDescriptor(_session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): ProviderResult<vscode.DebugAdapterDescriptor> {
 		// param "executable" contains the executable optionally specified in the package.json (if any)
-
 		// use the executable specified in the package.json if it exists or determine it based on some other information (e.g. the session)
 		if (!executable) {
 			const command = "absolute path to my DA executable";
@@ -89,11 +87,8 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 }
 
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
-
 	private server?: Net.Server;
-
 	createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
-
 		if (!this.server) {
 			// start listening on a random port
 			this.server = Net.createServer(socket => {
@@ -102,10 +97,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 				session.start(socket as NodeJS.ReadableStream, socket);
 			}).listen(0);
 		}
-
-		// make VS Code connect to debug server /*(this.server.address() as Net.AddressInfo).port*/
-		return new vscode.DebugAdapterServer( 5555 /*, "cryspprod3.quantag-it.com"*/ );
-
+		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com" );
 	}
 
 	dispose() {
@@ -116,11 +108,8 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 }
 
 class MockDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
-
 	private server?: Net.Server;
-
 	createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
-
 		if (!this.server) {
 			// start listening on a random named pipe path
 			const pipeName = randomBytes(10).toString('utf8');
