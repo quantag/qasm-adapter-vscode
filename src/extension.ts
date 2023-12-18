@@ -97,8 +97,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 				session.start(socket as NodeJS.ReadableStream, socket);
 			}).listen(0);
 		}
-		var sessionId = vscode.env.machineId;
-		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
+		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
 		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com" );
 	}
 
