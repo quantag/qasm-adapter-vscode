@@ -24,6 +24,7 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, workspaceFileAccessor } from './activateMockDebug';
+import {submitFiles} from './tools';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -97,8 +98,32 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 				session.start(socket as NodeJS.ReadableStream, socket);
 			}).listen(0);
 		}
-		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
-		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com" );
+
+		//Create output channel
+		let logger = vscode.window.createOutputChannel("OpenQASM");
+
+		   //Write to output.
+		logger.appendLine("Starting debugging session..");
+
+		const cp = require('child_process');
+		cp.exec('cd', (err, stdout, stderr) => {
+			logger.appendLine('stdout: ' + stdout);
+			logger.appendLine('stderr: ' + stderr);
+			if (err) {
+				logger.appendLine('error: ' + err);
+			}
+		});
+
+		if(vscode.workspace.workspaceFolders !== undefined) {
+			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath ; 
+			//var fs = require('fs');
+			//var files = fs.readdirSync(workplaceFolder);
+			//logger.appendLine(files);
+			submitFiles(workplaceFolder, session.id);
+		} 
+
+	//	vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
+		return new vscode.DebugAdapterServer( 5555 /*, "cryspprod3.quantag-it.com"*/ );
 	}
 
 	dispose() {
