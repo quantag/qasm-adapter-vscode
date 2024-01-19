@@ -46,6 +46,126 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetIBMQ', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for IMBQ',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetQBrilliance', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for Quantum Briulliance',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetGoogleSycamore', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for Google Sycamore',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetRigettiNovera', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for Rigetti Novera',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetQuantinuumH1', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for Quantinuum H1',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetQuantinuumH2', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for Quantinuum H2',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetIQMSpark', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for IQM Spark',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),	
+		vscode.commands.registerCommand('extension.mock-debug.buildTargetIonQTempo', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Build for IonQ Tempo',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),	
 		vscode.commands.registerCommand('extension.mock-debug.toggleFormatting', (variable) => {
 			const ds = vscode.debug.activeDebugSession;
 			if (ds) {

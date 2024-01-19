@@ -99,10 +99,10 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}).listen(0);
 		}
 
-		//Create output channel
+		// Create output channel
 		let logger = vscode.window.createOutputChannel("OpenQASM");
 
-		   //Write to output.
+		// Write to output.
 		logger.appendLine("Starting debugging session..");
 
 		const cp = require('child_process');
