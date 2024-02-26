@@ -88,6 +88,16 @@
           "command": "extension.mock-debug.debugEditorContents",
           "when": "resourceLangId == openqasm",
           "group": "navigation@2"
+        },
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == python",
+          "group": "navigation@1"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == python",
+          "group": "navigation@2"
         }
       ],
       "commandPalette": [
@@ -98,6 +108,14 @@
         {
           "command": "extension.mock-debug.runEditorContents",
           "when": "resourceLangId == openqasm"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == python"
+        },
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == python"
         }
       ],
       "debug/variables/context": [
@@ -186,6 +204,9 @@
     "breakpoints": [
       {
         "language": "openqasm"
+      },
+      {
+        "language": "python"
       }
     ],
     "languages": [
@@ -193,7 +214,12 @@
          "id": "openqasm",
          "aliases": ["OpenQASM"],
          "extensions": [".qasm"]
-      }
+      },
+      {
+        "id": "python",
+        "aliases": ["python"],
+        "extensions": [".py"]
+     }
    ],
     "grammars": [
      {
@@ -206,7 +232,8 @@
       {
         "type": "mock",
         "languages": [
-          "openqasm"
+          "openqasm",
+          "python"
         ],
         "label": "OpenQASM Debug",
         "program": "./out/debugAdapter.js",
