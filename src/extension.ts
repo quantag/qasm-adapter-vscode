@@ -116,12 +116,12 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath ; 
-			submitFiles(workplaceFolder, session.id);
+			submitFiles(workplaceFolder, session.id, workplaceFolder);
 		} 
 
 		// 	open browser pointing to web frontend
 		//	vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
-		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com" );
+		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com"  );
 	}
 
 	dispose() {
