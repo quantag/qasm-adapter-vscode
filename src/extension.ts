@@ -87,9 +87,15 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 	}
 }
 
+async function sleep(ms) {
+	return new Promise((resolve) => {
+	  setTimeout(resolve, ms);
+	});
+  }
+  
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
-	createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
+	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
 			// start listening on a random port
 			this.server = Net.createServer(socket => {
@@ -117,11 +123,12 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath ; 
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
+			await sleep(1000);
 		} 
 
 		// 	open browser pointing to web frontend
 		//	vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
-		return new vscode.DebugAdapterServer( 5555 , "cryspprod3.quantag-it.com"  );
+		return new vscode.DebugAdapterServer( 5555, "cryspprod3.quantag-it.com" );
 	}
 
 	dispose() {

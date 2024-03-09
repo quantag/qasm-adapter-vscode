@@ -59,35 +59,19 @@ async function getAllFilesInFolder(folderPath, filesData) {
 
 
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
-  // collect all files in all subfolders
-
-  try {
     const filesData: { path: string; source: string }[] = [];
 
-     await getAllFilesInFolder(folderPath, filesData);
+    await getAllFilesInFolder(folderPath, filesData);
       // Prepare the JSON payload
     const payload = {
-      sessionId: sessionId,
-      files: filesData,
-      root: rootFolder
+        sessionId: sessionId,
+        files: filesData,
+        root: rootFolder
     };
 
-    var json = JSON.stringify(payload);
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
+   await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
       method: 'POST',
-      body: json,
-      headers: {'Content-Type': 'application/json; charset=UTF-8'} });
-      
-      if (!response.ok) {  }
-      // If you care about a response:
-      if (response.body !== null) {
-        // parse as needed
-      }
-    
-    // Return the payload if needed
-    return ""; //payload;
-  } catch (err) {
-    console.error('Error:', err);
-  }
+      body: JSON.stringify(payload),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'} });    
 }
 
