@@ -1,9 +1,9 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.53.0",
+  "version": "0.54.0",
   "publisher": "QuantagITSolutionsGmbH",
-  "description": "Extension for OpenQASM, Qiksit and TKET debug adapters for VS Code.",
+  "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
     "name": "Quantag IT Solutions GmbH"
   },
