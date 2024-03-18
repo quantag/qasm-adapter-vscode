@@ -23,7 +23,7 @@ More information about quantum debugger adapter can be found
 
 You can now 'step through' the file, set and hit breakpoints, and run into exceptions (if the word exception appears in a line).
 
-![OpenQASM Debug](images/mock-debug.gif)
+![OpenQASM Debug](images/qasm-debug.gif)
 
 ## Build and Run
 
