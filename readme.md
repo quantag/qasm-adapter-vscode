@@ -13,6 +13,8 @@ This OpenQASM code can be views in 'Disassembly' window.
 More information about quantum debugger adapter can be found
 [here](https://quantag-it.com/quantum/#/debugger).
 
+Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
+
 ## Using OpenQASM debubber
 
 * Install the **Open QASM** extension in VS Code.
