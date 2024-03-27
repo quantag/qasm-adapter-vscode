@@ -31,7 +31,7 @@ You can now 'step through' the file, set and hit breakpoints, and run into excep
 
 * Clone the project [https://github.com/quantag/qasm-adapter-vscode](https://github.com/quantag/qasm-adapter-vscode)
 * Open the project folder in VS Code.
-* Press `F5` to build and launch Mock Debug in another VS Code window.
+* Press `F5` to build and launch Debugger in another VS Code window.
 * In the explorer view of the new window open the 'program' file `readme.md`
 * Set some breakpoints
-* From the editor's "Run and Debug" toolbar dropdown menu select "Debug File"
+* From the editor's "Run and Debug" toolbar dropdown menu select "Debug Circuit"

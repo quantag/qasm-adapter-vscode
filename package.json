@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.58.0",
+  "version": "0.59.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -128,14 +128,14 @@
     "commands": [
       {
         "command": "extension.mock-debug.debugEditorContents",
-        "title": "Debug File",
+        "title": "Debug Circuit",
         "category": "Mock Debug",
         "enablement": "!inDebugMode",
         "icon": "$(debug-alt)"
       },
       {
         "command": "extension.mock-debug.runEditorContents",
-        "title": "Run File",
+        "title": "Run Circuit",
         "category": "Mock Debug",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
