@@ -15,7 +15,7 @@ More information about quantum debugger adapter can be found
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
 
-## Using OpenQASM debubber
+## Using OpenQASM debugger
 
 * Install the **Open QASM** extension in VS Code.
 * Open OpenQASM or python scripts which uses Qiskit or TKET.
