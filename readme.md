@@ -27,7 +27,9 @@ You can now 'step through' the file, set and hit breakpoints, and run into excep
 
 ![OpenQASM Debug](images/qasm-debug.gif)
 
-Using command 'Render Circuit' in Commands Palette you can render circuit directly within VS Code. [Circuit](images/screenCircuit.png)
+Using command 'Render Circuit' in Commands Palette you can render circuit directly within VS Code. 
+
+![Circuit](images/screenCircuit.png)
 
 
 ## Build and Run
