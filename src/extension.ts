@@ -98,40 +98,6 @@ async function sleep(ms) {
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
 
-    async showImage(rootFolder: string) {
-		const panel = vscode.window.createWebviewPanel(
-            'imageViewer',
-            'Quantum Circuit',
-            vscode.ViewColumn.One,
-            {}
-        );
-		// Get the URI of the image file
-        const imagePath = vscode.Uri.file(rootFolder + '/image.jpg');
-		log(imagePath);
-        const imageSrc = panel.webview.asWebviewUri(imagePath);
-
-        // Set the HTML content of the webview to display the image
-        panel.webview.html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    img {
-                        max-width: 100%;
-                        max-height: 100%;
-                    }
-                </style>
-            </head>
-            <body>
-                <img src="${imageSrc}" alt="Image">
-            </body>
-            </html>
-        `;
-
-        // Return the webview-based debug adapter descriptor
-      //  return new vscode.DebugAdapterInlineImplementation(panel.webview);
-	}
-
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
 			// start listening on a random port
@@ -148,16 +114,15 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 			log("workplaceFolder: " + workplaceFolder);
-			log( "Before submitFiles");
+			//log( "Before submitFiles");
 
-			//this.showImage( workplaceFolder);
 			setSessionID(session.id);
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 
 			log("After submitFiles");
 
 			await sleep(500);
-			log("After sleep");
+			//log("After sleep");
 		} 
 
 		// 	open browser pointing to web frontend

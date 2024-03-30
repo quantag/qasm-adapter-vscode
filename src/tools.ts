@@ -105,17 +105,6 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
 }
 
 export function showImage64(data: string) {
-  const panel = vscode.window.createWebviewPanel(
-          'imageViewer',
-          'Quantum Circuit',
-          vscode.ViewColumn.One,
-          {}
-      );
-  // Get the URI of the image file
- //     const imagePath = vscode.Uri.file(rootFolder + '/image.jpg');
- // log(imagePath);
- //     const imageSrc = panel.webview.asWebviewUri(imagePath);
-
     var src = `
     <!DOCTYPE html>
     <html>
@@ -132,12 +121,19 @@ export function showImage64(data: string) {
     </body>
     </html>
 `
-      log(src);
       // Set the HTML content of the webview to display the image
-      panel.webview.html = src;
+      showHtml(src);
+}
 
-      // Return the webview-based debug adapter descriptor
-    //  return new vscode.DebugAdapterInlineImplementation(panel.webview);
+export function showHtml(src: string) {
+    const panel = vscode.window.createWebviewPanel(
+      'imageViewer',
+      'Quantum Circuit',
+      vscode.ViewColumn.One,
+      {}
+  );
+
+  panel.webview.html = src;
 }
 
 export async function getImage(sessionId: string) {
