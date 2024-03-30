@@ -129,7 +129,6 @@
         }
       ]
     },
-    "pricing": "Free",
     "commands": [
       {
         "command": "extension.mock-debug.debugEditorContents",
