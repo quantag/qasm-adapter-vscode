@@ -23,8 +23,9 @@ import { join } from 'path';
 import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
-import { activateMockDebug, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles} from './tools';
+import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
+import {submitFiles, log} from './tools';
+import path = require('path');
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -92,9 +93,45 @@ async function sleep(ms) {
 	  setTimeout(resolve, ms);
 	});
   }
-  
+
+
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
+
+    async showImage(rootFolder: string) {
+		const panel = vscode.window.createWebviewPanel(
+            'imageViewer',
+            'Quantum Circuit',
+            vscode.ViewColumn.One,
+            {}
+        );
+		// Get the URI of the image file
+        const imagePath = vscode.Uri.file(rootFolder + '/image.jpg');
+		log(imagePath);
+        const imageSrc = panel.webview.asWebviewUri(imagePath);
+
+        // Set the HTML content of the webview to display the image
+        panel.webview.html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    img {
+                        max-width: 100%;
+                        max-height: 100%;
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="${imageSrc}" alt="Image">
+            </body>
+            </html>
+        `;
+
+        // Return the webview-based debug adapter descriptor
+      //  return new vscode.DebugAdapterInlineImplementation(panel.webview);
+	}
+
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
 			// start listening on a random port
@@ -105,30 +142,27 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}).listen(0);
 		}
 
-		// Create output channel
-		let logger = vscode.window.createOutputChannel("OpenQASM");
-
 		// Write to output.
-		logger.appendLine("Starting debugging session..");
-
-		const cp = require('child_process');
-		cp.exec('cd', (err, stdout, stderr) => {
-			logger.appendLine('stdout: ' + stdout);
-			logger.appendLine('stderr: ' + stderr);
-			if (err) {
-				logger.appendLine('error: ' + err);
-			}
-		});
-
+		log("Starting OpenQASM debugging session..");
+		
 		if(vscode.workspace.workspaceFolders !== undefined) {
-			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath ; 
+			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+			log("workplaceFolder: " + workplaceFolder);
+			log( "Before submitFiles");
+
+			//this.showImage( workplaceFolder);
+			setSessionID(session.id);
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
-			await sleep(1000);
+
+			log("After submitFiles");
+
+			await sleep(500);
+			log("After sleep");
 		} 
 
 		// 	open browser pointing to web frontend
-		//	vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
-		return new vscode.DebugAdapterServer( 5555, "cryspprod3.quantag-it.com" );
+		// vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
+		return new vscode.DebugAdapterServer( 5555, "cryspprod3.quantag-it.com");
 	}
 
 	dispose() {

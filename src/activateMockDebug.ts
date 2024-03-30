@@ -11,6 +11,14 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
+import { getImage } from './tools';
+
+let currentSessionID: string;
+
+// Function to set the session ID
+export function setSessionID(sessionID: string) {
+    currentSessionID = sessionID;
+}
 
 export function activateMockDebug(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {
 
@@ -166,6 +174,14 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),	
+		vscode.commands.registerCommand('extension.mock-debug.getCircuitImage', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			//log(currentSessionID);
+			getImage(currentSessionID);
+		}),	
 		vscode.commands.registerCommand('extension.mock-debug.toggleFormatting', (variable) => {
 			const ds = vscode.debug.activeDebugSession;
 			if (ds) {
@@ -216,7 +232,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 	}
 	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('mock', factory));
 	if ('dispose' in factory) {
-		context.subscriptions.push(factory);
+//		context.subscriptions.push(factory);
 	}
 
 	// override VS Code's default implementation of the debug hover

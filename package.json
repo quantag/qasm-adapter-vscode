@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.60.0",
+  "version": "0.62.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -9,16 +9,16 @@
   },
   "license": "MIT",
   "keywords": [
-    "multi-root ready"
+    "OpenQASM Qiskit TKET python"
   ],
   "engines": {
     "vscode": "^1.66.0"
   },
-  "icon": "images/mock-debug-icon.png",
+  "icon": "images/openqasm-debug-icon.png",
   "categories": [
-    "Debuggers"
+    "Debuggers", "Language Packs"
   ],
-  "private": true,
+  "private": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/quantag/qasm-adapter-vscode.git"
@@ -116,6 +116,10 @@
         {
           "command": "extension.mock-debug.runEditorContents",
           "when": "resourceLangId == python"
+        },
+	{
+          "command": "extension.mock-debug.getCircuitImage",
+          "when": "resourceLangId == python"
         }
       ],
       "debug/variables/context": [
@@ -125,6 +129,7 @@
         }
       ]
     },
+    "pricing": "Free",
     "commands": [
       {
         "command": "extension.mock-debug.debugEditorContents",
@@ -194,6 +199,12 @@
         "title": "Build for IonQ Tempo",
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
+        "icon": "$(play)"
+      },
+      {
+        "command": "extension.mock-debug.getCircuitImage",
+        "title": "Render circuit",
+        "category": "Quantag Studio",
         "icon": "$(play)"
       },          
       {
