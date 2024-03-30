@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.63.0",
+  "version": "0.64.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -117,8 +117,12 @@
           "command": "extension.mock-debug.runEditorContents",
           "when": "resourceLangId == python"
         },
-	{
+	      {
           "command": "extension.mock-debug.getCircuitImage",
+          "when": "resourceLangId == python"
+        },
+        {
+          "command": "extension.mock-debug.getCircuitHtml",
           "when": "resourceLangId == python"
         }
       ],
@@ -202,7 +206,13 @@
       },
       {
         "command": "extension.mock-debug.getCircuitImage",
-        "title": "Render circuit",
+        "title": "Render Qiskit circuit",
+        "category": "Quantag Studio",
+        "icon": "$(play)"
+      }, 
+      {
+        "command": "extension.mock-debug.getCircuitHtml",
+        "title": "Render TKET circuit",
         "category": "Quantag Studio",
         "icon": "$(play)"
       },          

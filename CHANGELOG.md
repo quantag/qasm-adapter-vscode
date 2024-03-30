@@ -1,3 +1,7 @@
+## 0.64.0
+* added command 'Quantag Studio: Render Qiskit Circuit' to render Qiskit circuit within VS Code.
+* added command 'Quantag Studio: Render TKET Circuit' to render TKET circuit in external browser
+
 ## 0.50.0
 * add some details to completion items
 * use DAP 1.55.1

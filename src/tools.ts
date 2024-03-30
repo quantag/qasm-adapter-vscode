@@ -136,6 +136,25 @@ export function showHtml(src: string) {
   panel.webview.html = src;
 }
 
+export function showHtmlInExternalBrowser(htmlData: string) {
+    // Get the first workspace folder
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+        vscode.window.showErrorMessage("No workspace folder found.");
+        return;
+    }
+
+    // Generate a unique filename
+    const tempFileName = `temp_${Date.now()}.html`;
+    const tempFilePath = path.join(workspaceFolder.uri.fsPath, tempFileName);
+
+    // Write the HTML data to the temporary file
+    fs.writeFileSync(tempFilePath, htmlData);
+
+    // Open the temporary file in the default web browser
+    vscode.env.openExternal(vscode.Uri.file(tempFilePath));
+}
+
 export async function getImage(sessionId: string) {
   const payload = {
     sessionId: sessionId
@@ -148,7 +167,7 @@ export async function getImage(sessionId: string) {
     });
 
     if (!response.ok) {
-       log("reponse is not ok");
+       log("reponse is not ok: ${response.status} - ${response.statusText}");
       // throw new Error(`Failed to submit files: ${response.status} - ${response.statusText}`);
     }
 
@@ -157,6 +176,33 @@ export async function getImage(sessionId: string) {
     var base64data = responseData.data;
     showImage64(base64data);
    // log(JSON.stringify(responseData, null, 2)); // Log the JSON data with indentation for better readability
+
+  } catch (error) {
+      log("Error get image:" + error);
+  }
+}
+
+export async function getHtml(sessionId: string) {
+  const payload = {
+    file: sessionId + ".html"
+};
+  try {
+    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/getFile", {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'}
+    });
+
+    if (!response.ok) {
+       log("reponse is not ok: ${response.status} - ${response.statusText}");
+      // throw new Error(`Failed to submit files: ${response.status} - ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    var html64 = responseData.data;
+    const html: string = atob(html64);
+
+    showHtmlInExternalBrowser(html);
 
   } catch (error) {
       log("Error get image:" + error);
