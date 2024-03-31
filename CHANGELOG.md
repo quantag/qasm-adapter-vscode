@@ -1,3 +1,6 @@
+## 0.67.0
+* added rendering of pure OpenQASM circuits (earlier only python-based frameworks were rendered)
+
 ## 0.64.0
 * added command 'Quantag Studio: Render Qiskit Circuit' to render Qiskit circuit within VS Code.
 * added command 'Quantag Studio: Render TKET Circuit' to render TKET circuit in external browser
