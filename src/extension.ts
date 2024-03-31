@@ -120,13 +120,11 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 
 			log("After submitFiles");
-			await sleep(2000);
+			await sleep(1500);
 			log("After sleep");
 
 		} 
 
-		// 	open browser pointing to web frontend
-		// vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+session.id));
 		return new vscode.DebugAdapterServer( 5555, "cryspprod3.quantag-it.com");
 	}
 

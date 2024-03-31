@@ -208,3 +208,8 @@ export async function getHtml(sessionId: string) {
       log("Error get image:" + error);
   }
 }
+
+export async function openCircuitWeb(sessionId: string) {
+		// 	open browser pointing to web frontend
+		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
+}

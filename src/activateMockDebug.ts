@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
-import { getHtml, getImage } from './tools';
+import { getHtml, getImage, openCircuitWeb } from './tools';
 
 let currentSessionID: string;
 
@@ -187,6 +187,13 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				targetResource = vscode.window.activeTextEditor.document.uri;
 			}
 			getHtml(currentSessionID);
+		}),	
+		vscode.commands.registerCommand('extension.mock-debug.openCircuitWeb', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			openCircuitWeb(currentSessionID);
 		}),	
 		vscode.commands.registerCommand('extension.mock-debug.toggleFormatting', (variable) => {
 			const ds = vscode.debug.activeDebugSession;

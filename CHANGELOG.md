@@ -1,3 +1,7 @@
+## 0.69.0
+* delay changed to 1.5s
+* added command in Command Palette 'Open Circuit Web' with opening web front end in external browser (after starting debuggin session!)
+
 ## 0.68.0
 * added 2 sec delay for file uploading to avoid concurent problems
 
