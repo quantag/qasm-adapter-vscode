@@ -120,8 +120,9 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 
 			log("After submitFiles");
+			await sleep(2000);
+			log("After sleep");
 
-			await sleep(500);
 		} 
 
 		// 	open browser pointing to web frontend

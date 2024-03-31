@@ -1,3 +1,6 @@
+## 0.68.0
+* added 2 sec delay for file uploading to avoid concurent problems
+
 ## 0.67.0
 * added rendering of pure OpenQASM circuits (earlier only python-based frameworks were rendered)
 
