@@ -158,14 +158,7 @@
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
-      },    
-      {
-        "command": "extension.mock-debug.buildTargetQBrilliance",
-        "title": "Build for Quantum Brilliance",
-        "category": "Quantag Studio",
-        "enablement": "!inDebugMode",
-        "icon": "$(play)"
-      },   
+      },  
       {
         "command": "extension.mock-debug.buildTargetGoogleSycamore",
         "title": "Build for Google Sycamore",

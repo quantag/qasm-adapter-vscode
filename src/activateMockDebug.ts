@@ -69,21 +69,6 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),
-		vscode.commands.registerCommand('extension.mock-debug.buildTargetQBrilliance', (resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			if (targetResource) {
-				vscode.debug.startDebugging(undefined, {
-					type: 'mock',
-					name: 'Build for Quantum Briulliance',
-					request: 'launch',
-					program: targetResource.fsPath,
-					stopOnEntry: true
-				});
-			}
-		}),
 		vscode.commands.registerCommand('extension.mock-debug.buildTargetGoogleSycamore', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
@@ -284,14 +269,8 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 						const varName = m[1];
 						const varRange = new vscode.Range(l, m.index, l, m.index + varName.length);
 
-						// some literal text
-						//allValues.push(new vscode.InlineValueText(varRange, `${varName}: ${viewport.start.line}`));
-
 						// value found via variable lookup
 						allValues.push(new vscode.InlineValueVariableLookup(varRange, varName, false));
-
-						// value determined via expression evaluation
-						//allValues.push(new vscode.InlineValueEvaluatableExpression(varRange, varName));
 					}
 				} while (m);
 			}

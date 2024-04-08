@@ -64,9 +64,7 @@ async function getAllFilesInFolder(folderPath, filesData) {
   console.log("Found " + subFolders.length + " subfolders in " + folderPath);
 
   for(var sub of subFolders) { 
-    //  var subFiles = 
     await getAllFilesInFolder(sub, filesData);
-     // console.log("Found " + subFiles.length + " files in " + sub);
   }
   
   return filesData;
@@ -132,7 +130,6 @@ export function showHtml(src: string) {
       vscode.ViewColumn.One,
       {}
   );
-
   panel.webview.html = src;
 }
 
@@ -168,14 +165,12 @@ export async function getImage(sessionId: string) {
 
     if (!response.ok) {
        log("reponse is not ok: ${response.status} - ${response.statusText}");
-      // throw new Error(`Failed to submit files: ${response.status} - ${response.statusText}`);
     }
 
     const responseData = await response.json();
     log(responseData);
     var base64data = responseData.data;
     showImage64(base64data);
-   // log(JSON.stringify(responseData, null, 2)); // Log the JSON data with indentation for better readability
 
   } catch (error) {
       log("Error get image:" + error);
@@ -195,7 +190,6 @@ export async function getHtml(sessionId: string) {
 
     if (!response.ok) {
        log("reponse is not ok: ${response.status} - ${response.statusText}");
-      // throw new Error(`Failed to submit files: ${response.status} - ${response.statusText}`);
     }
 
     const responseData = await response.json();

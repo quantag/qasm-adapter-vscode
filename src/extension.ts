@@ -113,16 +113,11 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 			log("workplaceFolder: " + workplaceFolder);
-			//log( "Before submitFiles");
 
 			setSessionID(session.id);
 			log("SessionId: "+ session.id);
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
-
-			//log("After submitFiles");
 			await sleep(1500);
-			//log("After sleep");
-
 		} 
 
 		return new vscode.DebugAdapterServer(5555, "cryspprod3.quantag-it.com");
