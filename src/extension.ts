@@ -25,7 +25,6 @@ import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
 import {submitFiles, log} from './tools';
-import path = require('path');
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -117,15 +116,16 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			//log( "Before submitFiles");
 
 			setSessionID(session.id);
+			log("SessionId: "+ session.id);
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 
-			log("After submitFiles");
+			//log("After submitFiles");
 			await sleep(1500);
-			log("After sleep");
+			//log("After sleep");
 
 		} 
 
-		return new vscode.DebugAdapterServer( 5555, "cryspprod3.quantag-it.com");
+		return new vscode.DebugAdapterServer(5555, "cryspprod3.quantag-it.com");
 	}
 
 	dispose() {
