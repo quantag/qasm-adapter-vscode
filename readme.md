@@ -20,6 +20,8 @@ More information about quantum debugger adapter can be found
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
 
+Detailed documentation of extension can be downloaded as PDF from [here] (https://quantag-it.com/pub/qdb/QSextensionDocs.pdf)
+
 ## Using OpenQASM debugger
 
 * Install the **OpenQASM** extension in VS Code.
