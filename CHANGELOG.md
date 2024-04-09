@@ -1,3 +1,6 @@
+## 0.72.0
+* in readme added link to PDF documentation 
+
 ## 0.69.0
 * delay changed to 1.5s
 * added command in Command Palette 'Open Circuit Web' with opening web front end in external browser (after starting debuggin session!)
