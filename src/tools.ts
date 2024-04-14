@@ -178,26 +178,32 @@ export async function getImage(sessionId: string) {
 }
 
 export async function runZISimulator(srcData: string) {
+  var srcDataBase64 = btoa(srcData);
   const payload = {
-    src: srcData
+    src: srcDataBase64
   };
   try {
-    const response = await fetch("https://cryspprod2.quantag-it.com:4483/api2/run", {
+    const response = await fetch("https://cryspprod2.quantag-it.com:4043/api2/run", {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
     });
 
     if (!response.ok) {
-       log("reponse is not ok: ${response.status} - ${response.statusText}");
+       log("reponse is not ok: " + response.status + " - " + response.statusText);
     }
 
     const responseData = await response.json();
-    log(responseData);
-    var html64 = responseData.data;
-    const html: string = atob(html64);
+  //  log(responseData);
+    var respStatus = responseData.status;
+    if(respStatus==2) {
+      log("Error: " + responseData.err);
+    }
+    if(respStatus==0) {
+      log("Result: " + responseData.res);
+    }
+   //const html: string = atob(html64);
 
-    log(html);
   } catch (error) {
       log("Error :" + error);
   }
