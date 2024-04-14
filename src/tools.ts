@@ -155,7 +155,7 @@ export function showHtmlInExternalBrowser(htmlData: string) {
 export async function getImage(sessionId: string) {
   const payload = {
     sessionId: sessionId
-};
+  };
   try {
     const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/getImage", {
         method: 'POST',
@@ -177,10 +177,36 @@ export async function getImage(sessionId: string) {
   }
 }
 
+export async function runZISimulator(srcData: string) {
+  const payload = {
+    src: srcData
+  };
+  try {
+    const response = await fetch("https://cryspprod2.quantag-it.com:4483/api2/run", {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'}
+    });
+
+    if (!response.ok) {
+       log("reponse is not ok: ${response.status} - ${response.statusText}");
+    }
+
+    const responseData = await response.json();
+    log(responseData);
+    var html64 = responseData.data;
+    const html: string = atob(html64);
+
+    log(html);
+  } catch (error) {
+      log("Error :" + error);
+  }
+}
+
 export async function getHtml(sessionId: string) {
   const payload = {
     file: sessionId + ".html"
-};
+  };
   try {
     const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/getFile", {
         method: 'POST',
@@ -197,7 +223,6 @@ export async function getHtml(sessionId: string) {
     const html: string = atob(html64);
 
     showHtmlInExternalBrowser(html);
-
   } catch (error) {
       log("Error get image:" + error);
   }

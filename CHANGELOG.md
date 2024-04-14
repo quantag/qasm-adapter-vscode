@@ -1,3 +1,6 @@
+## 0.75.0
+* added support of Zurich Instruments Simulator
+
 ## 0.72.0
 * in readme added link to PDF documentation 
 

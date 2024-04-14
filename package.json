@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.74.0",
+  "version": "0.75.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -181,8 +181,8 @@
         "icon": "$(play)"
       },  
       {
-        "command": "extension.mock-debug.buildTargetQuantinuumH2",
-        "title": "Build for Quantinuum H2",
+        "command": "extension.mock-debug.runOnZISimulator",
+        "title": "Run on Zurich Instruments Simulator",
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
