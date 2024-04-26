@@ -120,13 +120,34 @@ export function showImage64(data: string) {
     </html>
 `
       // Set the HTML content of the webview to display the image
-      showHtml(src);
+      showHtml(src, "Quantum Circuit");
 }
 
-export function showHtml(src: string) {
+export function showQUA64(data: string) {
+  var src = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <style>
+          img {
+              max-width: 100%;
+              max-height: 100%;
+          }
+      </style>
+  </head>
+  <body>
+      <xmp>${data}</xmp>
+  </body>
+  </html>
+`
+    // Set the HTML content of the webview to display the image
+    showHtml(src, "QUA");
+}
+
+export function showHtml(src: string, title: string) {
     const panel = vscode.window.createWebviewPanel(
       'imageViewer',
-      'Quantum Circuit',
+      title,
       vscode.ViewColumn.One,
       {}
   );
@@ -177,6 +198,39 @@ export async function getImage(sessionId: string) {
   }
 }
 
+export async function compileToQUA(srcData: string) {
+  var srcDataBase64 = btoa(srcData);
+  const payload = {
+    src: srcDataBase64
+  };
+  try {
+    const response = await fetch("https://cryspprod3.quantag-it.com:444/api4/compile", {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'}
+    });
+
+    if (!response.ok) {
+       log("reponse is not ok: " + response.status + " - " + response.statusText);
+    }
+
+    const responseData = await response.json();
+    var respStatus = responseData.status;
+    if(respStatus==2) {
+      log("Error: " + responseData.err);
+    }
+    if(respStatus==0) {
+      var resp = atob( responseData.res );
+      log(resp);
+      showQUA64(resp);
+
+    }
+
+  } catch (error) {
+      log("Error :" + error);
+  }
+}
+
 export async function runZISimulator(srcData: string) {
   var srcDataBase64 = btoa(srcData);
   const payload = {
@@ -200,9 +254,9 @@ export async function runZISimulator(srcData: string) {
       log("Error: " + responseData.err);
     }
     if(respStatus==0) {
-      log("Result: " + responseData.res);
+      var decodedRes = atob(responseData.res);
+      log("Result: " + decodedRes);
     }
-   //const html: string = atob(html64);
 
   } catch (error) {
       log("Error :" + error);

@@ -1,3 +1,6 @@
+## 0.76.0
+* decoding results from Zurich Instruments Simulator
+
 ## 0.75.0
 * added support of Zurich Instruments Simulator
 
