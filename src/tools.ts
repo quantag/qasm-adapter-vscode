@@ -198,39 +198,6 @@ export async function getImage(sessionId: string) {
   }
 }
 
-export async function compileToQUA(srcData: string) {
-  var srcDataBase64 = btoa(srcData);
-  const payload = {
-    src: srcDataBase64
-  };
-  try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api4/compile", {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'}
-    });
-
-    if (!response.ok) {
-       log("reponse is not ok: " + response.status + " - " + response.statusText);
-    }
-
-    const responseData = await response.json();
-    var respStatus = responseData.status;
-    if(respStatus==2) {
-      log("Error: " + responseData.err);
-    }
-    if(respStatus==0) {
-      var resp = atob( responseData.res );
-      log(resp);
-      showQUA64(resp);
-
-    }
-
-  } catch (error) {
-      log("Error :" + error);
-  }
-}
-
 export async function runZISimulator(srcData: string) {
   var srcDataBase64 = btoa(srcData);
   const payload = {

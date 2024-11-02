@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
-import { compileToQUA, getHtml, getImage, openCircuitWeb, runZISimulator } from './tools';
+import { getHtml, getImage, openCircuitWeb, runZISimulator } from './tools';
 
 let currentSessionID: string;
 
@@ -124,34 +124,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				const documentText = document.getText();
 				runZISimulator(documentText);
 			}
-
 		}),
-		vscode.commands.registerCommand('extension.mock-debug.compileToQua', (resource: vscode.Uri) => {
-			const editor = vscode.window.activeTextEditor;
-
-			if (editor) {
-				let document = editor.document;
-	
-				// Get the document text
-				const documentText = document.getText();
-				compileToQUA(documentText);
-			}
-		}),	
-		vscode.commands.registerCommand('extension.mock-debug.buildTargetIonQTempo', (resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			if (targetResource) {
-				vscode.debug.startDebugging(undefined, {
-					type: 'mock',
-					name: 'Build for IonQ Tempo',
-					request: 'launch',
-					program: targetResource.fsPath,
-					stopOnEntry: true
-				});
-			}
-		}),	
 		vscode.commands.registerCommand('extension.mock-debug.getCircuitImage', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {

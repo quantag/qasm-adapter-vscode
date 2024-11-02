@@ -186,20 +186,6 @@
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
-      },   
-      {
-        "command": "extension.mock-debug.compileToQua",
-        "title": "Compile to QUA",
-        "category": "Quantag Studio",
-        "enablement": "!inDebugMode",
-        "icon": "$(play)"
-      },     
-      {
-        "command": "extension.mock-debug.buildTargetIonQTempo",
-        "title": "Build for IonQ Tempo",
-        "category": "Quantag Studio",
-        "enablement": "!inDebugMode",
-        "icon": "$(play)"
       },
       {
         "command": "extension.mock-debug.getCircuitImage",
