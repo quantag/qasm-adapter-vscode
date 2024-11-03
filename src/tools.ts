@@ -82,12 +82,13 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
         root: rootFolder
     };
 
-   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'}
-    });
+    log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
+    try {
+      const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: {'Content-Type': 'application/json; charset=UTF-8'}
+      });
 
     if (!response.ok) {
        log("reponse is not ok");
