@@ -26,6 +26,9 @@ import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
 import {submitFiles, log} from './tools';
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
  * Please note: the test suite only supports 'external' mode.
@@ -96,6 +99,57 @@ async function sleep(ms) {
 
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
+	private config: any;
+	private serverName: string  = "cryspprod3.quantag-it.com";
+	private serverPort: number = 5555;
+
+	constructor() {
+		this.loadConfig(); // Load config when the factory is created
+	  }
+
+	  private async loadConfig() {
+		const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+	
+		if (workspaceFolder) {
+		  const configPath = path.join(workspaceFolder, 'config.json');
+	
+		  if (fs.existsSync(configPath)) {
+			try {
+			  const configFileContent = await fs.promises.readFile(configPath, 'utf8');
+			  this.config = JSON.parse(configFileContent);
+			  this.parseBackendConfig();
+
+			} catch (error) {
+			  log('Failed to load config.json:' + error);
+			}
+		  } else {
+			log('config.json not found in workspace.');
+		  }
+		} else {
+		  log('No workspace folder found.');
+		}
+	  }
+
+	  private parseBackendConfig() {
+		if (this.config && this.config.backend) {
+		  const [server, portStr] = this.config.backend.split(':');
+	
+		  if (server && portStr) {
+			this.serverName = server;
+			var _port = parseInt(portStr, 10);
+			
+			if (isNaN(this.serverPort)) {
+			  log('Invalid port value in backend configuration. Using default');
+			  this.serverPort = 5555; // Reset if port is invalid
+			} else {
+				this.serverPort = _port;
+			    log(`Parsed serverName: ${this.serverName}, port: ${this.serverPort}`);
+			}
+		  }
+		} else {
+		  log('No backend configuration found in config.json.');
+		}
+	  }
 
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
@@ -116,11 +170,13 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 			setSessionID(session.id);
 			log("SessionId: "+ session.id);
+			
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
+
 			await sleep(1500);
 		}
 
-		return new vscode.DebugAdapterServer(5555 , "cryspprod3.quantag-it.com");
+		return new vscode.DebugAdapterServer(this.serverPort, this.serverName);
 	}
 
 	dispose() {
