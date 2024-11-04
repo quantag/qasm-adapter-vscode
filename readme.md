@@ -47,3 +47,18 @@ Using command 'Render Qiskit Circuit' in Commands Palette you can render circuit
 * Set some breakpoints
 * From the editor's "Run and Debug" toolbar dropdown menu select "Debug Circuit"
 * From Command Pallete choose 'Quantag Studio: Render Circuit' to visualize circuit in new tab.
+
+## Configuration (optional)
+
+If workplace contains file __config.json__ it is trated as configuration.
+
+Currently it supports only backend address
+
+Example of configuraiton file:
+```
+{
+  "backend": "cryspprod3.quantag-it.com:5555"
+}
+```
+
+
