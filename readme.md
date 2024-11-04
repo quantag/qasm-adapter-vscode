@@ -2,7 +2,7 @@
 
 This extension allows debugging of quantum program written in OpenQASM or one of python frameworks - [Qiskit](https://www.ibm.com/quantum/qiskit) or [TKET](https://www.quantinuum.com/developers/tket).
 
-**OpenQASM** debugger connects to remote Quantum Virtual Machine (QVM) using [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol).
+**OpenQASM** debugger connects to remote Quantum Virtual Machine ( [QVM](https://github.com/quantag/qdb-qscore) ) using [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol).
 
 It supports *step*, *continue*, *breakpoints*, *exceptions*, and
 *variable access*.
