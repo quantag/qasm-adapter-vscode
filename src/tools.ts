@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 const logger = vscode.window.createOutputChannel("OpenQASM");
 const fs = require('fs');
+const qirOutput = vscode.window.createOutputChannel("QIR");
 
 function base64Encode(data: string): string {
   return Buffer.from(data).toString('base64');
@@ -23,6 +24,11 @@ function formatMilliseconds(date: Date): string {
 export function log(message) {
   logger.appendLine(formatMilliseconds(new Date()) + " " + message);
 }
+
+export function logQIR(message) {
+  logqirOutputger.appendLine(message);
+}
+
 
 async function getDirectories(folderPath) {
   var result: string[] = []; 
