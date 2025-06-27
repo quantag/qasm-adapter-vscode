@@ -16,7 +16,7 @@ Using commands it is possible to render Qiskit and TKET circuits directly in VS 
 *These commands can be used only after starting debugging session.*
 
 More information about quantum debugger adapter can be found
-[here](https://quantag-it.com/quantum/#/debugger).
+[here](https://quantum.quantag-it.com/).
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
 
