@@ -87,7 +87,6 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
         files: filesData,
         root: rootFolder
     };
-
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
     try {
       const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
@@ -222,7 +221,6 @@ export async function runZISimulator(srcData: string) {
     }
 
     const responseData = await response.json();
-  //  log(responseData);
     var respStatus = responseData.status;
     if(respStatus==2) {
       log("Error: " + responseData.err);
@@ -267,16 +265,16 @@ export async function openCircuitWeb(sessionId: string) {
 		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
 }
 
-export async function QASMtoQIR(sessionId: string) {
-		// sends request with QASM to ... to get QIR in responce
-    log("  Start QASMtoQIR");
-
-    var testQASM = `T1BFTlFBU00gMi4wOwppbmNsdWRlICJxZWxpYjEuaW5jIjsKcXJlZyBxWzRdOwpjcmVnIGNbNF07CnggcVswXTsgCnggcVsyXTsKYmFycmllciBxOwpoIHFbMF07CmN1MShwaS8yKSBxWzFdLHFbMF07CmggcVsxXTsKY3UxKHBpLzQpIHFbMl0scVswXTsKY3UxKHBpLzIpIHFbMl0scVsxXTsKaCBxWzJdOwpjdTEocGkvOCkgcVszXSxxWzBdOwpjdTEocGkvNCkgcVszXSxxWzFdOwpjdTEocGkvMikgcVszXSxxWzJdOwpoIHFbM107Cm1lYXN1cmUgcSAtPiBjOw==`
+export async function QASMtoQIR(srcData: string) {
+  var srcDataBase64 = btoa(srcData);
+    const payload = {
+      qasm: srcDataBase64
+    };
 
     try {
       const response = await fetch("https://cryspprod3.quantag-it.com:444/api7/qasm2qir", {
           method: 'POST',
-          body: JSON.stringify({qasm: testQASM}),
+          body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
       });
 
@@ -285,11 +283,14 @@ export async function QASMtoQIR(sessionId: string) {
       }
 
       const responseData = await response.json();
-      log(responseData);
+      log(responseData)
+
+      var resp64 = responseData.qir;
+      const qir: string = atob(resp64);
+      qirOutput.append(qir);
     } 
     catch (error) {
       log("Error in QASMtoQIR: " + error);
     }
 
-		log("  Stop QASMtoQIR");
 }

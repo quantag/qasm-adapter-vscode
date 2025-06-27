@@ -163,7 +163,6 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 		// Write to output.
 		log("Starting OpenQASM debugging session..");
-		
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 			log("workplaceFolder: " + workplaceFolder);
@@ -211,3 +210,5 @@ class MockDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAd
 		}
 	}
 }
+
+

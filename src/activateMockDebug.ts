@@ -130,6 +130,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			if (!targetResource && vscode.window.activeTextEditor) {
 				targetResource = vscode.window.activeTextEditor.document.uri;
 			}
+			QASMtoQIR(currentSessionID);
 			getImage(currentSessionID);
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.getCircuitHtml', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
@@ -147,11 +148,19 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			openCircuitWeb(currentSessionID);
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.QASMtoQIR', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
+			//let targetResource = resource;
+			//if (!targetResource && vscode.window.activeTextEditor) {
+			//	targetResource = vscode.window.activeTextEditor.document.uri;
+			//}
+			//QASMtoQIR(currentSessionID);
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				let document = editor.document;
+	
+				// Get the document text
+				const documentText = document.getText();
+				QASMtoQIR(documentText);
 			}
-			QASMtoQIR(currentSessionID);
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.toggleFormatting', (variable) => {
 			const ds = vscode.debug.activeDebugSession;
