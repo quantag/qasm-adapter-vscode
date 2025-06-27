@@ -21,14 +21,14 @@ function formatMilliseconds(date: Date): string {
 
 	return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}:${milliseconds}`;
 }
+
 export function log(message) {
   logger.appendLine(formatMilliseconds(new Date()) + " " + message);
 }
 
 export function logQIR(message) {
-  logqirOutputger.appendLine(message);
+  qirOutput.appendLine(message);
 }
-
 
 async function getDirectories(folderPath) {
   var result: string[] = []; 
@@ -265,4 +265,31 @@ export async function getHtml(sessionId: string) {
 export async function openCircuitWeb(sessionId: string) {
 		// 	open browser pointing to web frontend
 		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
+}
+
+export async function QASMtoQIR(sessionId: string) {
+		// sends request with QASM to ... to get QIR in responce
+    log("  Start QASMtoQIR");
+
+    var testQASM = `T1BFTlFBU00gMi4wOwppbmNsdWRlICJxZWxpYjEuaW5jIjsKcXJlZyBxWzRdOwpjcmVnIGNbNF07CnggcVswXTsgCnggcVsyXTsKYmFycmllciBxOwpoIHFbMF07CmN1MShwaS8yKSBxWzFdLHFbMF07CmggcVsxXTsKY3UxKHBpLzQpIHFbMl0scVswXTsKY3UxKHBpLzIpIHFbMl0scVsxXTsKaCBxWzJdOwpjdTEocGkvOCkgcVszXSxxWzBdOwpjdTEocGkvNCkgcVszXSxxWzFdOwpjdTEocGkvMikgcVszXSxxWzJdOwpoIHFbM107Cm1lYXN1cmUgcSAtPiBjOw==`
+
+    try {
+      const response = await fetch("https://cryspprod3.quantag-it.com:444/api7/qasm2qir", {
+          method: 'POST',
+          body: JSON.stringify({qasm: testQASM}),
+          headers: {'Content-Type': 'application/json; charset=UTF-8'}
+      });
+
+      if (!response.ok) {
+        log("QASMtoQIR reponse is not ok: " + response.status + " - " + response.statusText);
+      }
+
+      const responseData = await response.json();
+      log(responseData);
+    } 
+    catch (error) {
+      log("Error in QASMtoQIR: " + error);
+    }
+
+		log("  Stop QASMtoQIR");
 }
