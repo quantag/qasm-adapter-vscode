@@ -128,6 +128,10 @@
         {
           "command": "extension.mock-debug.openCircuitWeb",
           "when": "resourceLangId == python || resourceLangId == openqasm" 
+        },
+        {
+          "command": "extension.mock-debug.QASMtoQIR",
+          "when": "resourceLangId == python || resourceLangId == openqasm" 
         }
       ],
       "debug/variables/context": [
@@ -202,6 +206,12 @@
       {
         "command": "extension.mock-debug.openCircuitWeb",
         "title": "Open Web Circuit",
+        "category": "Quantag Studio",
+        "icon": "$(play)"
+      },
+      {
+        "command": "extension.mock-debug.QASMtoQIR",
+        "title": "QASM to QIR",
         "category": "Quantag Studio",
         "icon": "$(play)"
       },            
