@@ -265,6 +265,15 @@ export async function openCircuitWeb(sessionId: string) {
 		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
 }
 
+async function  showQirInNewTab(qirText: string) {
+    const fileName = 'qir_output.ll'; // Optional: gives a nicer syntax highlight if filetype known
+    const doc = await vscode.workspace.openTextDocument({
+        content: qirText,
+        language: 'llvm'  // or 'plaintext' if unsure
+    });
+    await vscode.window.showTextDocument(doc, { preview: false });
+}
+
 export async function QASMtoQIR(srcData: string) {
   var srcDataBase64 = btoa(srcData);
     const payload = {
@@ -288,6 +297,8 @@ export async function QASMtoQIR(srcData: string) {
       var resp64 = responseData.qir;
       const qir: string = atob(resp64);
       qirOutput.append(qir);
+
+      showQirInNewTab(qir);
     } 
     catch (error) {
       log("Error in QASMtoQIR: " + error);

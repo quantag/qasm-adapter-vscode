@@ -1,3 +1,6 @@
+## 0.81.0
+* Added OpenQASM to QIR command
+
 ## 0.76.0
 * decoding results from Zurich Instruments Simulator
 
