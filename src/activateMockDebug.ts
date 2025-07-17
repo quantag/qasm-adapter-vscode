@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
-import { getHtml, getImage, openCircuitWeb, QASMtoQIR, runZISimulator } from './tools';
+import { getHtml, getImage, openCircuitWeb, QASMtoQIR, runOnIBMQ, runZISimulator } from './tools';
 
 let currentSessionID: string;
 
@@ -55,18 +55,14 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			}
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.buildTargetIBMQ', (resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			if (targetResource) {
-				vscode.debug.startDebugging(undefined, {
-					type: 'mock',
-					name: 'Build for IMBQ',
-					request: 'launch',
-					program: targetResource.fsPath,
-					stopOnEntry: true
-				});
+			const editor = vscode.window.activeTextEditor;
+
+			if (editor) {
+				let document = editor.document;
+	
+				// Get the document text
+				const documentText = document.getText();
+				runOnIBMQ(documentText);
 			}
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.buildTargetGoogleSycamore', (resource: vscode.Uri) => {

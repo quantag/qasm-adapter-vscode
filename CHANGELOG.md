@@ -1,3 +1,9 @@
+## 0.84.0
+* Support of IBM Quantum hardware backend
+
+## 0.82.0
+* Using Google Cloud endpoint for OpenQASM to QIR converter
+
 ## 0.81.0
 * Added OpenQASM to QIR command
 
