@@ -204,6 +204,56 @@ export async function getImage(sessionId: string) {
   }
 }
 
+export async function readConfig(): Promise<any> {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    throw new Error('No workspace folder open');
+  }
+
+  const configPath = path.join(workspaceFolders[0].uri.fsPath, 'config.json');
+  log("configPath: " + configPath);
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`No config.json file found in workplace folder ${configPath}`);
+  }
+
+  const raw = fs.readFileSync(configPath, 'utf8');
+  return JSON.parse(raw);
+}
+
+export async function runOnIBMQ(srcData: string) {
+  try {
+        var srcDataBase64 = btoa(srcData);
+        const URL = "https://quantum.quantag-it.com/api5/submit_ibm_job";
+        const config = await readConfig(); // read token, user_id, instance, backend
+
+        const payload = {
+            qasm: srcDataBase64,
+            user_id: config.user_id,
+            instance: config.instance,
+            token: config.token,
+            backend: config.backend
+        };
+       // log("Submitting job to: " + URL);
+       // log("Request payload: " + JSON.stringify(payload, null, 2));
+
+        const response = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {'Content-Type': 'application/json; charset=UTF-8'}
+        });
+
+          if (!response.ok) {
+            log("reponse is not ok: " + response.status + " - " + response.statusText);
+          } else {
+            const responseData = await response.json(); // 🔥 await this!
+            log("Successfully submitted job to IBM. Check status at https://quantum.quantag-it.com/profile");
+            log("Response JSON: " + JSON.stringify(responseData, null, 2));
+          }
+  } catch (error) {
+      log("Error :" + error);
+  }
+}
+
 export async function runZISimulator(srcData: string) {
   var srcDataBase64 = btoa(srcData);
   const payload = {
@@ -281,7 +331,7 @@ export async function QASMtoQIR(srcData: string) {
     };
 
     try {
-      const response = await fetch("https://cryspprod3.quantag-it.com:444/api7/qasm2qir", {
+      const response = await fetch("https://api.quantag-it.com/qasm2qir", {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
