@@ -1,17 +1,3 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-/*
- * extension.ts (and activateMockDebug.ts) forms the "plugin" that plugs into VS Code and contains the code that
- * connects VS Code with the debug adapter.
- * 
- * extension.ts contains code for launching the debug adapter in three different ways:
- * - as an external program communicating with VS Code via stdin/stdout,
- * - as a server process communicating with VS Code via sockets or named pipes, or
- * - as inlined code running in the extension itself (default).
- * 
- * Since the code in extension.ts uses node.js APIs it cannot run in the browser.
- */
 
 'use strict';
 
@@ -24,7 +10,8 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log} from './tools';
+import {submitFiles, log, parseJwt} from './tools';
+import { RemoteFileSystemProvider } from './remoteFileSystemProvider';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,6 +21,14 @@ import * as path from 'path';
  * Please note: the test suite only supports 'external' mode.
  */
 const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'server';
+
+
+const config = vscode.workspace.getConfiguration('remoteFiles');
+const apiBaseUrl = config.get<string>('baseUrl', 'https://cryspprod3.quantag-it.com/api5');
+let statusBarItem: vscode.StatusBarItem;
+const AUTH_CHECK_URL = "https://cryspprod3.quantag-it.com:444/api10/check_token_ready";
+const AUTH_START_URL = "https://cryspprod3.quantag-it.com:444/api10/google-auth-start";
+const AUTH_POLL_INTERVAL = 2000;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -59,11 +54,156 @@ export function activate(context: vscode.ExtensionContext) {
 			activateMockDebug(context);
 			break;
 	}
+
+
+
+	let remoteFsProvider: RemoteFileSystemProvider | undefined;
+
+	context.secrets.get("remoteAuthToken").then(token => {
+		if (token) {
+			remoteFsProvider = new RemoteFileSystemProvider(apiBaseUrl, token);
+			context.subscriptions.push(
+				vscode.workspace.registerFileSystemProvider('remote', remoteFsProvider, {
+					isReadonly: false,
+				})
+			);
+		}
+	});
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("remoteFiles.openRemote", async () => {
+			const token = await context.secrets.get("remoteAuthToken");
+
+			if (!token) {
+				vscode.window.showErrorMessage("Not logged in. Please run Google Login first.");
+				return;
+			}
+
+			if (!remoteFsProvider) {
+				// Safety net: register provider now
+				remoteFsProvider = new RemoteFileSystemProvider(apiBaseUrl, token);
+				context.subscriptions.push(
+					vscode.workspace.registerFileSystemProvider('remote', remoteFsProvider, {
+						isReadonly: false,
+					})
+				);
+			}
+
+			vscode.workspace.updateWorkspaceFolders(
+				0,
+				0,
+				{ uri: vscode.Uri.parse('remote:/'), name: 'Remote Files' }
+			);
+		})
+	);
+
+	context.subscriptions.push(vscode.commands.registerCommand("quantagStudio.logout", async () => {
+			await context.secrets.delete("remoteAuthToken");
+			statusBarItem.text = "Quantag: Not Logged In";
+			statusBarItem.show();
+
+			vscode.window.showInformationMessage("Logged out successfully.");
+
+			const folders = vscode.workspace.workspaceFolders || [];
+			const remoteIndex = folders.findIndex(f => f.uri.scheme === "remote");
+
+			if (remoteIndex !== -1) {
+				vscode.workspace.updateWorkspaceFolders(remoteIndex, 1);
+			}
+		})
+	);
+
+
+
+
+	// === Register Quantag Studio Google Auth Command ===
+	context.subscriptions.push(
+		vscode.commands.registerCommand("quantagStudio.authWithGoogle", async () => {
+			await authWithGoogle(context);
+		})
+	);
+
+	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	statusBarItem.command = "quantagStudio.authWithGoogle";
+	statusBarItem.tooltip = "Quantag Studio Google Auth";
+	context.subscriptions.push(statusBarItem);
+
+	statusBarItem.text = "Quantag Studio: Init...";
+	statusBarItem.show();
+
+	updateLoginStatusBar(context); 
 }
 
 export function deactivate() {
 	// nothing to do
 }
+
+
+async function authWithGoogle(context: vscode.ExtensionContext) {
+	const loginToken = crypto.randomUUID(); // или shortid или base64
+
+	const url = `${AUTH_START_URL}?login_token=${loginToken}`;
+	vscode.env.openExternal(vscode.Uri.parse(url));
+
+    vscode.window.showInformationMessage("Please complete login in your browser...");
+    const status = vscode.window.setStatusBarMessage("Waiting for Google login...");
+
+    let token: string | undefined = undefined;
+    const maxAttempts = 10;
+    let attempts = 0;
+
+    while (attempts++ < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, AUTH_POLL_INTERVAL));
+
+        try {
+            const res = await fetch(`${AUTH_CHECK_URL}?login_token=${loginToken}`, {
+                method: 'GET'
+            });
+
+            if (res.status === 200) {
+                const json = await res.json();
+                token = json.token;
+                break;
+            }
+        } catch (err) {
+            console.error("Polling error", err);
+        }
+    }
+
+    status.dispose();
+
+    if (token) {
+        await context.secrets.store("remoteAuthToken", token);
+        vscode.window.showInformationMessage("Google login successful.");
+		console.info("Google login successful!");
+    } else {
+        vscode.window.showErrorMessage("Login timeout. Please try again.");
+    }
+
+    updateLoginStatusBar(context);
+}
+
+function updateLoginStatusBar(context: vscode.ExtensionContext) {
+	console.log("Calling updateLoginStatusBar");
+	context.secrets.get("remoteAuthToken").then(token => {
+		console.log("Got token from secrets:", token);
+		let email = null;
+
+		if (token) {
+			const payload = parseJwt(token);
+			email = payload?.email;
+		}
+
+		statusBarItem.text = email
+			? `Quantag: ${email}`
+			: token
+			? "Quantag: Logged In"
+			: "Quantag: Not Logged In";
+
+		statusBarItem.show();
+	});
+}
+
 
 class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFactory {
 	// The following use of a DebugAdapter factory shows how to control what debug adapter executable is used.

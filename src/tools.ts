@@ -30,6 +30,18 @@ export function logQIR(message) {
   qirOutput.appendLine(message);
 }
 
+export function parseJwt(token: string): any {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = Buffer.from(payload, 'base64').toString('utf8');
+        return JSON.parse(decoded);
+    } catch (e) {
+        console.error("Failed to decode JWT:", e);
+        return null;
+    }
+}
+
+
 async function getDirectories(folderPath) {
   var result: string[] = []; 
   const files = await fsPromises.readdir(folderPath);

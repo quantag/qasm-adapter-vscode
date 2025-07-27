@@ -65,6 +65,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				runOnIBMQ(documentText);
 			}
 		}),
+		
 		vscode.commands.registerCommand('extension.mock-debug.buildTargetGoogleSycamore', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {

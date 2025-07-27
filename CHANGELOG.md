@@ -1,3 +1,6 @@
+## 0.85.0
+* Support of Google Auth and Remote File System
+
 ## 0.84.0
 * Support of IBM Quantum hardware backend
 
