@@ -40,6 +40,14 @@ async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
 
     log(`stat [${requestId}] -> Response status: ${res.status}`);
 
+    if (res.status === 404) {
+      return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
+    }
+
+    if (!res.ok) {
+      return Promise.reject(vscode.FileSystemError.Unavailable(uri));
+    }
+
     const json = await res.json();
     log("stat ["+requestId+"] -> JSON response: " + JSON.stringify(json));
 
@@ -65,6 +73,14 @@ async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     });
 
     log(`readDirectory -> Response status: ${res.status}`);
+
+    if (res.status === 404) {
+      return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
+    }
+
+    if (!res.ok) {
+      return Promise.reject(vscode.FileSystemError.Unavailable(uri));
+    }
 
     const text = await res.text();
     log("readDirectory -> JSON response: " + text);
@@ -96,6 +112,14 @@ async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     });
 
     log(`readFile [${requestId}] -> Response status: ${res.status}`);
+    
+    if (res.status === 404) {
+      return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
+    }
+
+    if (!res.ok) {
+      return Promise.reject(vscode.FileSystemError.Unavailable(uri));
+    }
 
     const data = await res.arrayBuffer();
     log(`readFile [${requestId}] -> Received ${data.byteLength} bytes`);
