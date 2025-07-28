@@ -29,18 +29,19 @@ makeHeaders(): Record<string, string> {
   }
 
 async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+  const requestId = Math.random().toString(36).substring(2, 10);
   const url = `${this.baseUrl}/stat?path=${uri.path}`;
-  log("stat -> URL: " + url);
+  log("stat ["+requestId+"] -> URL: " + url);
 
   try {
     const res = await fetch(url, {
       headers: this.makeHeaders()
     });
 
-    log(`stat -> Response status: ${res.status}`);
+    log(`stat [${requestId}] -> Response status: ${res.status}`);
 
     const json = await res.json();
-    log("stat -> JSON response: " + JSON.stringify(json));
+    log("stat ["+requestId+"] -> JSON response: " + JSON.stringify(json));
 
     return {
       type: json.isDirectory ? vscode.FileType.Directory : vscode.FileType.File,
@@ -84,35 +85,102 @@ async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
 }
 
 
-  async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-    const res = await fetch(`${this.baseUrl}/file?path=${uri.path}`, {
+async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+  const requestId = Math.random().toString(36).substring(2, 10);
+  const url = `${this.baseUrl}/file?path=${uri.path}`;
+  log(`readFile [${requestId}] -> URL: ${url}`);
+
+  try {
+    const res = await fetch(url, {
       headers: this.makeHeaders()
     });
-    const data = await res.arrayBuffer();
-    return new Uint8Array(data);
-  }
 
-  async writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
-    await fetch(`${this.baseUrl}/file?path=${uri.path}`, {
+    log(`readFile [${requestId}] -> Response status: ${res.status}`);
+
+    const data = await res.arrayBuffer();
+    log(`readFile [${requestId}] -> Received ${data.byteLength} bytes`);
+
+    return new Uint8Array(data);
+  } catch (err) {
+    log(`readFile [${requestId}] -> Error: ${err}`);
+    throw err;
+  }
+}
+
+async writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
+  const requestId = Math.random().toString(36).substring(2, 10);
+  const url = `${this.baseUrl}/file?path=${uri.path}`;
+  log(`writeFile [${requestId}] -> URL: ${url}`);
+  log(`writeFile [${requestId}] -> Sending ${content.byteLength} bytes`);
+
+  try {
+    const res = await fetch(url, {
       method: 'POST',
       headers: this.makeHeaders(),
       body: content,
     });
-  }
 
-  async createDirectory(uri: vscode.Uri): Promise<void> {
-    await fetch(`${this.baseUrl}/mkdir?path=${uri.path}`, {
+    log(`writeFile [${requestId}] -> Response status: ${res.status}`);
+
+    if (!res.ok) {
+      const text = await res.text();
+      log(`writeFile [${requestId}] -> Error response body: ${text}`);
+      throw new Error(`Failed to write file: ${res.status} ${res.statusText}`);
+    }
+  } catch (err) {
+    log(`writeFile [${requestId}] -> Error: ${err}`);
+    throw err;
+  }
+}
+
+ async createDirectory(uri: vscode.Uri): Promise<void> {
+  const requestId = Math.random().toString(36).substring(2, 10);
+  const url = `${this.baseUrl}/mkdir?path=${uri.path}`;
+  log(`createDirectory [${requestId}] -> URL: ${url}`);
+
+  try {
+    const res = await fetch(url, {
       method: 'POST',
       headers: this.makeHeaders(),
     });
-  }
 
-  async delete(uri: vscode.Uri): Promise<void> {
-    await fetch(`${this.baseUrl}/delete?path=${uri.path}`, {
+    log(`createDirectory [${requestId}] -> Response status: ${res.status}`);
+
+    if (!res.ok) {
+      const text = await res.text();
+      log(`createDirectory [${requestId}] -> Error response body: ${text}`);
+      throw new Error(`Failed to create directory: ${res.status} ${res.statusText}`);
+    }
+  } catch (err) {
+    log(`createDirectory [${requestId}] -> Error: ${err}`);
+    throw err;
+  }
+}
+
+
+async delete(uri: vscode.Uri): Promise<void> {
+  const requestId = Math.random().toString(36).substring(2, 10);
+  const url = `${this.baseUrl}/delete?path=${uri.path}`;
+  log(`delete [${requestId}] -> URL: ${url}`);
+
+  try {
+    const res = await fetch(url, {
       method: 'DELETE',
       headers: this.makeHeaders(),
     });
+
+    log(`delete [${requestId}] -> Response status: ${res.status}`);
+
+    if (!res.ok) {
+      const text = await res.text();
+      log(`delete [${requestId}] -> Error response body: ${text}`);
+      throw new Error(`Failed to delete: ${res.status} ${res.statusText}`);
+    }
+  } catch (err) {
+    log(`delete [${requestId}] -> Error: ${err}`);
+    throw err;
   }
+}
 
   async rename(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<void> {
     await fetch(`${this.baseUrl}/rename`, {
@@ -124,4 +192,5 @@ async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
       body: JSON.stringify({ oldPath: oldUri.path, newPath: newUri.path }),
     });
   }
+
 }
