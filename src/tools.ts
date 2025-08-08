@@ -56,7 +56,7 @@ async function getDirectories(folderPath) {
 }
 
 async function getAllFilesInFolder(folderPath, filesData) {
-  console.log("getAllFilesInFolder " + folderPath);
+  log("getAllFilesInFolder " + folderPath);
   const files = await fsPromises.readdir(folderPath);
 
   // Filter files with .qasm or .py extension
@@ -79,7 +79,7 @@ async function getAllFilesInFolder(folderPath, filesData) {
   }
 
   var subFolders = await getDirectories(folderPath);
-  console.log("Found " + subFolders.length + " subfolders in " + folderPath);
+  log("Found " + subFolders.length + " subfolders in " + folderPath);
 
   for(var sub of subFolders) { 
     await getAllFilesInFolder(sub, filesData);
@@ -101,7 +101,7 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
     };
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
     try {
-      const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/submitFiles", {
+      const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/submitFiles", {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -196,7 +196,7 @@ export async function getImage(sessionId: string) {
     sessionId: sessionId
   };
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/getImage", {
+    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getImage", {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -302,7 +302,7 @@ export async function getHtml(sessionId: string) {
     file: sessionId + ".html"
   };
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/getFile", {
+    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getFile", {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}

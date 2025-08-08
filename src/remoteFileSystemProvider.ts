@@ -1,6 +1,20 @@
 import * as vscode from 'vscode';
 import fetch from 'node-fetch';
 import { log } from './tools';
+import { OAuth2Client } from 'google-auth-library';
+
+let currentUserID: string;
+
+// Function to set the user ID
+export function setUserID(userID: string) {
+  currentUserID = userID;
+}
+
+// Function to get the user ID
+export function getUserID(): string {
+  return currentUserID;
+}
+
 
 export class RemoteFileSystemProvider implements vscode.FileSystemProvider {
   private emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -14,12 +28,37 @@ export class RemoteFileSystemProvider implements vscode.FileSystemProvider {
     this.token = token;
   }
 
+async getUserIdFromGoogleToken(idToken: string): Promise<string> {
+  const client = new OAuth2Client();
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: undefined,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.sub) {
+      throw new Error('Invalid token payload');
+    }
+
+    setUserID(payload.sub);
+
+    return payload.sub; // This is the unique user ID (Google's)
+  } catch (error) {
+    console.error('Failed to verify Google ID token:', error);
+    throw error;
+  }
+}
+
 makeHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
  // log("token: " + this.token);
 
   if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
+
+      const userId = this.getUserIdFromGoogleToken(this.token);
+      console.log('User ID:', userId);
   }
   return headers;
 }
@@ -39,6 +78,10 @@ async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
     });
 
     log(`stat [${requestId}] -> Response status: ${res.status}`);
+
+    if (res.status === 401) {
+      log("Not logged in. Please run Google Login first.");
+    }
 
     if (res.status === 404) {
       return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
@@ -73,6 +116,10 @@ async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     });
 
     log(`readDirectory -> Response status: ${res.status}`);
+
+    if (res.status === 401) {
+      log("Not logged in. Please run Google Login first.");
+    }
 
     if (res.status === 404) {
       return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
@@ -112,6 +159,10 @@ async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     });
 
     log(`readFile [${requestId}] -> Response status: ${res.status}`);
+
+    if (res.status === 401) {
+      log("Not logged in. Please run Google Login first.");
+    }
     
     if (res.status === 404) {
       return Promise.reject(vscode.FileSystemError.FileNotFound(uri));
