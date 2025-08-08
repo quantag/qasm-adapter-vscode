@@ -11,7 +11,7 @@ import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
 import {submitFiles, log, parseJwt} from './tools';
-import { RemoteFileSystemProvider } from './remoteFileSystemProvider';
+import { getUserID, RemoteFileSystemProvider } from './remoteFileSystemProvider';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -29,6 +29,7 @@ let statusBarItem: vscode.StatusBarItem;
 const AUTH_CHECK_URL = "https://cryspprod3.quantag-it.com:444/api10/check_token_ready";
 const AUTH_START_URL = "https://cryspprod3.quantag-it.com:444/api10/google-auth-start";
 const AUTH_POLL_INTERVAL = 2000;
+
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -64,7 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
 			remoteFsProvider = new RemoteFileSystemProvider(apiBaseUrl, token);
 			context.subscriptions.push(
 				vscode.workspace.registerFileSystemProvider('remote', remoteFsProvider, {
-					isReadonly: false,
+					isReadonly: true,
+					isCaseSensitive: true
 				})
 			);
 		}
@@ -84,7 +86,8 @@ export function activate(context: vscode.ExtensionContext) {
 				remoteFsProvider = new RemoteFileSystemProvider(apiBaseUrl, token);
 				context.subscriptions.push(
 					vscode.workspace.registerFileSystemProvider('remote', remoteFsProvider, {
-						isReadonly: false,
+						isReadonly: true,
+						isCaseSensitive: true
 					})
 				);
 			}
@@ -309,6 +312,30 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 			setSessionID(session.id);
 			log("SessionId: "+ session.id);
+			
+			log("UserID: "+ getUserID());
+			if(getUserID() !== undefined) {
+
+				const payload = {
+					sessionId: session.id,
+					userId: getUserID()
+				};
+				try {
+					log("send prepareData");
+					const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/prepareData", {
+						method: 'POST',
+						body: JSON.stringify(payload),
+						headers: {'Content-Type': 'application/json; charset=UTF-8'}
+					});
+					
+					if (!response.ok) {
+					log("reponse of prepare data is not ok: "+ response.status +", "+ response.statusText);
+					}
+					
+				} catch (error) {
+					log("Error prepare data:" + error);
+				}
+			}
 			
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 
