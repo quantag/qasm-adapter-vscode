@@ -1,3 +1,6 @@
 {
-  "backend": "cryspprod3.quantag-it.com:5555"
+  "token": "pBC6irT_rm_W1e_x04ZpTMOK1zbe_Ng67FczuNQYFxS4",
+  "backend": "ibm_torino",
+  "user_id": "cde5e204-d172-4f0b-9e4d-7a43e3bd2d8c",
+  "instance": "one" 
 }

@@ -38,6 +38,12 @@ Using command 'Render Qiskit Circuit' in Commands Palette you can render circuit
 ![Circuit](images/screenCircuit.png)
 
 
+## 3d Circuit visualization
+
+Open .qasm file and execute command *3D Circuit Visualizer* from Command Palette
+
+![3DCircuit](images/3d_circuit1.png)
+
 ## Build and Run
 
 * Clone the project [https://github.com/quantag/qasm-adapter-vscode](https://github.com/quantag/qasm-adapter-vscode)
