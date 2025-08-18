@@ -114,29 +114,29 @@ export function activate(context: vscode.ExtensionContext) {
 		// Step 2: Transpile using cloud API
 		let circuitJson;
 		try {
-		const apiBase = "https://cryspprod3.quantag-it.com:444/api15";
-		const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+			const apiBase = "https://cryspprod3.quantag-it.com:444/api15";
+			const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
 
-		const response = await fetch(apiBase + "/transpile", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-			qasm_b64: qasmB64,
-			backend: "ibm_brisbane",
-			opt: 3
-			})
-		});
+			const response = await fetch(apiBase + "/transpile", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+				qasm_b64: qasmB64,
+				backend: "ibm_brisbane",
+				opt: 3
+				})
+			});
 
-		if (!response.ok) {
-			const text = await response.text();
-			throw new Error("Transpile failed: " + response.status + ": " + text);
-		}
+			if (!response.ok) {
+				const text = await response.text();
+				throw new Error("Transpile failed: " + response.status + ": " + text);
+			}
 
-		circuitJson = await response.json();
+			circuitJson = await response.json();
 
 		} catch (err: any) {
-		vscode.window.showErrorMessage("Failed to transpile: " + err.message);
-		return;
+			vscode.window.showErrorMessage("Failed to transpile: " + err.message);
+			return;
 		}
 
 		// Step 3: Open the WebView panel
@@ -162,7 +162,10 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 	);
 
-
+  context.subscriptions.push(
+    vscode.commands.registerCommand('quantagStudio.optimizeQasmPyZX', optimizeQasmCommandPyZX),
+    vscode.commands.registerCommand('quantagStudio.renderQasmPyZX', renderQasmCommandPyZX)
+  );
 
 
 	context.subscriptions.push(vscode.commands.registerCommand("quantagStudio.logout", async () => {
@@ -180,7 +183,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-
 
 
 
@@ -204,6 +206,96 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
 	// nothing to do
+}
+
+
+async function optimizeQasmCommandPyZX() {
+	// Step 1: Read QASM from active file 
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return;
+	}
+
+	const qasm = editor.document.getText();
+    if (!qasm) return;
+    const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+
+  try {
+		const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/optimize", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qasm: qasmB64 }),
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error("Optimize failed: " + response.status + ": " + text);
+		}
+
+		const result = await response.json();
+		const optimizedQasm = Buffer.from(result.qasm, "base64").toString("utf-8");
+
+		const newDoc = await vscode.workspace.openTextDocument({
+			content: optimizedQasm,
+			language: "qasm"
+		});
+		vscode.window.showTextDocument(newDoc);
+		vscode.window.showInformationMessage("QASM optimized using PyZX.");
+  } catch (err: any) {
+    vscode.window.showErrorMessage("Optimization failed: " + err.message);
+  }
+}
+
+async function renderQasmCommandPyZX() {
+	// Step 1: Read QASM from active file 
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return;
+	}
+
+	const qasm = editor.document.getText();
+    if (!qasm) return;
+	const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+  
+
+  try {
+const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/render", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qasm: qasmB64 }),
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error("Render failed: " + response.status + ": " + text);
+		}
+
+		const result = await response.json();
+		const imageB64 = result.image;
+
+		const panel = vscode.window.createWebviewPanel(
+			"qasmDiagram",
+			"QASM Diagram",
+			vscode.ViewColumn.Beside,
+			{ enableScripts: true }
+		);
+
+		panel.webview.html = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>body { margin: 0; background: #1e1e1e; display: flex; justify-content: center; align-items: center; height: 100vh; }</style>
+		</head>
+		<body>
+			<img src="data:image/png;base64,${imageB64}" style="max-width: 100%; max-height: 100%;" />
+		</body>
+		</html>
+		`;
+  } catch (err: any) {
+    vscode.window.showErrorMessage("Rendering failed: " + err.message);
+  }
 }
 
 function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscode.WebviewPanel): string {

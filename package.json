@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.88.0",
+  "version": "0.89.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -182,6 +182,16 @@
       {
         "command": "quantagStudio.authWithGoogle",
         "title": "Auth with Google",
+        "category": "Quantag Studio"
+      },
+      {
+      "command": "quantagStudio.optimizeQasmPyZX",
+      "title": "Optimize QASM with PyZX",
+      "category": "Quantag Studio"
+      },
+      {
+        "command": "quantagStudio.renderQasmPyZX",
+        "title": "Render QASM Diagram with PyZX",
         "category": "Quantag Studio"
       },
       {
