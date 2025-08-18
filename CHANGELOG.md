@@ -1,3 +1,6 @@
+## 0.89.0
+* Added support of   [ZX-Calculum library](https://zxcalculus.com/) for optimization and rendeing
+
 ## 0.87.0
 * Added 3d Circuit visualization
 

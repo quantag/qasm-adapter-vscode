@@ -44,6 +44,19 @@ Open .qasm file and execute command *3D Circuit Visualizer* from Command Palette
 
 ![3DCircuit](images/3d_circuit1.png)
 
+## ZX Calculus Support
+
+Open .qasm file and execute command *Render QASM Diagram with PyZX* from Command Palette
+
+![ZX-Calculus Render command](images/pyzx_render_cmd.png)
+
+![ZX-Calculus Render](images/pyzx_render.png)
+
+Open .qasm file and execute command *Optimize QASM with PyZX* from Command Palette
+
+![ZX-Calculus Optimize command](images/pyzx_optimize_cmd.png)
+![ZX-Calculus Rendered Optimized](images/pyzx_render2.png)
+
 ## Build and Run
 
 * Clone the project [https://github.com/quantag/qasm-adapter-vscode](https://github.com/quantag/qasm-adapter-vscode)
