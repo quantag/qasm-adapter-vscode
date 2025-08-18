@@ -100,6 +100,71 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+	vscode.commands.registerCommand("quantagStudio.show3dVisualizer", async () => {
+		// Step 1: Read QASM from active file BEFORE opening WebView
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return;
+		}
+
+		const qasm = editor.document.getText();
+
+		// Step 2: Transpile using cloud API
+		let circuitJson;
+		try {
+		const apiBase = "https://cryspprod3.quantag-it.com:444/api15";
+		const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+
+		const response = await fetch(apiBase + "/transpile", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+			qasm_b64: qasmB64,
+			backend: "ibm_brisbane",
+			opt: 3
+			})
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error("Transpile failed: " + response.status + ": " + text);
+		}
+
+		circuitJson = await response.json();
+
+		} catch (err: any) {
+		vscode.window.showErrorMessage("Failed to transpile: " + err.message);
+		return;
+		}
+
+		// Step 3: Open the WebView panel
+		const panel = vscode.window.createWebviewPanel(
+		"quantumVisualizer",
+		"3D Quantum Circuit Visualizer",
+		vscode.ViewColumn.Two,
+		{
+			enableScripts: true,
+			retainContextWhenHidden: true
+		}
+		);
+
+		panel.webview.html = getWebviewVisualizerHtml(context, panel);
+
+		// Step 4: Send the circuit data to the WebView
+		setTimeout(() => {
+		panel.webview.postMessage({
+			type: "renderCircuit",
+			data: circuitJson
+		});
+		}, 500);
+	})
+	);
+
+
+
+
 	context.subscriptions.push(vscode.commands.registerCommand("quantagStudio.logout", async () => {
 			await context.secrets.delete("remoteAuthToken");
 			statusBarItem.text = "Quantag: Not Logged In";
@@ -139,6 +204,79 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
 	// nothing to do
+}
+
+function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscode.WebviewPanel): string {
+  const webview = panel.webview;
+
+  const script = (name: string) =>
+    webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QPU Visualizer</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#0b0d10; color:#e5e7eb; font-family:sans-serif; }
+    canvas { display: block; }
+  </style>
+  <script type="module">
+    import * as THREE from "${script("three.module.js")}";
+    import { OrbitControls } from "${script("OrbitControls.js")}";
+    import { initViewer, setGateLibrary, renderFromData } from "${script("qpu_viewer.js")}";
+    import { renderQPU } from "${script("render_default.js")}";
+
+    const ctx = initViewer(THREE, OrbitControls, renderQPU);
+    await setGateLibrary("${script("gate_lib_default.js")}", ctx);
+
+    window.addEventListener('message', event => {
+      const msg = event.data;
+      if (msg?.type === 'renderCircuit') {
+        ctx.currentData = msg.data;
+        renderFromData(ctx, msg.data);
+      }
+    });
+  </script>
+</head>
+<body></body>
+</html>
+  `;
+}
+
+
+
+function getActiveQasmText(): string | undefined {
+	log("getActiveQasmText");
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {return;}
+	log("getActiveQasmText 1");
+	const document = editor.document;
+	if (document.languageId !== 'openqasm') {return;}
+	log("getActiveQasmText 2");
+	return document.getText();
+}
+
+async function transpileQasm(apiBaseUrl: string, qasm: string, backend: string): Promise<any> {
+  const qasmB64 = Buffer.from(qasm, 'utf-8').toString('base64');
+
+  const response = await fetch(`${apiBaseUrl}/transpile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      qasm_b64: qasmB64,
+      backend: backend,
+      opt: 3
+    })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Transpile failed: ${response.status}: ${text}`);
+  }
+
+  return await response.json();
 }
 
 

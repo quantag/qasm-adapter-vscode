@@ -1,3 +1,6 @@
+## 0.87.0
+* Added 3d Circuit visualization
+
 ## 0.85.0
 * Support of Google Auth and Remote File System
 

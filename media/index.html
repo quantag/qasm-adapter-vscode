@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QPU Visualizer</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#0b0d10; color:#e5e7eb; font-family:sans-serif; }
+    #toolbar {
+      position:fixed; top:10px; left:10px; z-index:10;
+      background:rgba(0,0,0,0.55); border:1px solid #334155; border-radius:8px; padding:10px;
+      display:grid; grid-auto-flow:column; grid-auto-columns:max-content; gap:8px; align-items:center; font-size:13px;
+    }
+    #file { display:none; }
+    button, select {
+      background:#1f2937; color:#e5e7eb; border:1px solid #374151; border-radius:6px; padding:6px 10px; cursor:pointer;
+    }
+    button:hover, select:hover { background:#374151; }
+    #status { font-size:12px; color:#9ca3af; margin-left:6px; }
+    .sep { width:1px; height:22px; background:#334155; margin:0 4px; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <!-- Source: sample OR upload -->
+    <label>Sample:</label>
+    <select id="samples" style="min-width:180px"></select>
+    <button id="btnLoadSample">Load sample</button>
+    <div class="sep"></div>
+    <button id="btnPick">Upload .qasm</button>
+    <input id="file" type="file" accept=".qasm,text/*" />
+    <div class="sep"></div>
+
+    <!-- Backend & lib -->
+    <label>Backend:</label>
+    <select id="backend" style="min-width:200px"></select>
+    <div class="sep"></div>
+    <label>Gate lib:</label>
+    <select id="gateLib">
+      <option value="./gate_lib_default.js">default</option>
+      <option value="./gate_lib_fun.js">fun</option>
+    </select>
+    <button id="btnApplyLib">Apply</button>
+    <div class="sep"></div>
+
+    <!-- Actions -->
+    <button id="btnRender" disabled>RENDER</button>
+    <button id="btnReset">Reset Camera</button>
+    <span id="status"></span>
+  </div>
+
+  <script type="module">
+    // ---------- CONFIG ----------
+    const API_BASE = "https://cryspprod3.quantag-it.com:444/api15"; // your Flask base
+    const OPT_LEVEL = 3;
+
+    // ---------- IMPORTS ----------
+    import * as THREE from './three.module.js';
+    import { OrbitControls } from './OrbitControls.js';
+    import { initViewer, setGateLibrary, renderFromData } from './qpu_viewer.js';
+    import { renderQPU } from './render_default.js';
+
+    // ---------- VIEWER INIT ----------
+    const ctx = initViewer(THREE, OrbitControls, renderQPU);
+
+    // gate lib (from URL or default)
+    const params = new URLSearchParams(location.search);
+    const initialLib = params.get('lib') || './gate_lib_default.js';
+    await setGateLibrary(initialLib, ctx);
+
+    // ---------- UI ELEMENTS ----------
+    const elSamples  = document.getElementById('samples');
+    const elLoadSamp = document.getElementById('btnLoadSample');
+    const elFile     = document.getElementById('file');
+    const elPick     = document.getElementById('btnPick');
+    const elBackend  = document.getElementById('backend');
+    const elGateLib  = document.getElementById('gateLib');
+    const elApplyLib = document.getElementById('btnApplyLib');
+    const elRender   = document.getElementById('btnRender');
+    const elReset    = document.getElementById('btnReset');
+    const elStatus   = document.getElementById('status');
+
+    if ([...elGateLib.options].some(o => o.value === initialLib)) elGateLib.value = initialLib;
+
+    // ---------- STATE ----------
+    let qasmText = null;          // current source text (sample or upload)
+    let qasmSource = null;        // {type:'sample'|'upload', name:string}
+    let backendsLoaded = false;
+    let samplesLoaded = false;
+
+    // ---------- HELPERS ----------
+    const setStatus = (msg) => { elStatus.textContent = msg || ""; };
+    const enableRenderIfReady = () => {
+      elRender.disabled = !(qasmText && elBackend.value);
+    };
+    const niceBytes = (n) => (n>=1024 ? (n/1024).toFixed(1)+' KB' : n+' B');
+
+    // robust base64 for text (handles unicode)
+    function base64EncodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+    async function fetchBackends() {
+      setStatus("Loading backends…");
+      try {
+        const res = await fetch(`${API_BASE}/list_backends`, { headers: { "Accept":"application/json" } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const list = Array.isArray(payload.backends) ? payload.backends : (payload.files || []);
+        // sort: hardware first, then name
+        list.sort((a,b) => (Number(a.simulator)-Number(b.simulator)) || String(a.name).localeCompare(b.name));
+        elBackend.innerHTML = "";
+        for (const b of list) {
+          const opt = document.createElement('option');
+          const simTag = b.simulator ? " (sim)" : "";
+          const opTag  = (b.operational === false) ? " [down]" : "";
+          opt.value = b.name;
+          opt.textContent = `${b.name}${simTag}${opTag}`;
+          elBackend.appendChild(opt);
+        }
+        backendsLoaded = true;
+        setStatus(`Backends: ${list.length} loaded`);
+        enableRenderIfReady();
+      } catch (e) {
+        setStatus(`Failed to load backends: ${e}`);
+        backendsLoaded = false;
+      }
+    }
+
+    async function fetchSamples() {
+      setStatus("Loading samples…");
+      try {
+        const res = await fetch(`${API_BASE}/samples`, { headers: { "Accept":"application/json" } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const files = Array.isArray(payload.files) ? payload.files : [];
+        files.sort((a,b) => String(a.name).localeCompare(b.name));
+        elSamples.innerHTML = "";
+        for (const f of files) {
+          const opt = document.createElement('option');
+          opt.value = f.name;
+          opt.textContent = `${f.name} (${niceBytes(f.size_bytes ?? 0)})`;
+          elSamples.appendChild(opt);
+        }
+        samplesLoaded = true;
+        setStatus(`Samples: ${files.length} found`);
+      } catch (e) {
+        setStatus(`Failed to load samples: ${e}`);
+        samplesLoaded = false;
+      }
+    }
+
+    async function loadSampleText(name) {
+      if (!name) throw new Error("No sample selected");
+      setStatus(`Loading sample ${name}…`);
+      const url = `${API_BASE}/samples/${encodeURIComponent(name)}?format=raw`;
+      const res = await fetch(url, { headers: { "Accept":"text/plain" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      // lightweight sanity check: must include "qreg" or OPENQASM header
+      if (!/OPENQASM|qreg\s+\w+\[\d+\]/i.test(text)) {
+        console.warn("Sample did not look like QASM, but using anyway.");
+      }
+      qasmText = text;
+      qasmSource = { type: "sample", name };
+      setStatus(`Sample loaded: ${name} (${text.length} chars)`);
+      enableRenderIfReady();
+    }
+
+    async function callTranspile(qasmStr, backendName, opt=OPT_LEVEL) {
+      setStatus(`Transpiling on ${backendName}…`);
+      const body = {
+        qasm_b64: base64EncodeUtf8(qasmStr),
+        backend: backendName,
+        opt
+      };
+      const res = await fetch(`${API_BASE}/transpile`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        let txt = await res.text().catch(()=> "");
+        throw new Error(`HTTP ${res.status} ${txt}`);
+      }
+      return res.json();
+    }
+
+    // ---------- EVENTS ----------
+    elPick.addEventListener('click', () => elFile.click());
+    elFile.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        qasmText = String(reader.result || "");
+        qasmSource = { type:"upload", name:f.name };
+        setStatus(`Uploaded: ${f.name} (${qasmText.length} chars)`);
+        enableRenderIfReady();
+      };
+      reader.readAsText(f);
+    });
+
+    elLoadSamp.addEventListener('click', async () => {
+      const name = elSamples.value;
+      if (!name) { setStatus("Pick a sample first"); return; }
+      try {
+        await loadSampleText(name);
+      } catch (e) {
+        setStatus(`Failed to load sample: ${e}`);
+      }
+    });
+
+    elApplyLib.addEventListener('click', async () => {
+      const libPath = elGateLib.value;
+      try {
+        await setGateLibrary(libPath, ctx);
+        setStatus(`Gate library applied: ${libPath}`);
+        if (ctx.currentData) renderFromData(ctx, ctx.currentData);
+      } catch (e) {
+        setStatus(`Failed to apply library: ${e}`);
+      }
+    });
+
+    elRender.addEventListener('click', async () => {
+      const be = elBackend.value;
+      if (!qasmText) { setStatus("Load a sample or upload a .qasm first"); return; }
+      if (!be) { setStatus("Select a backend"); return; }
+      try {
+        const data = await callTranspile(qasmText, be, OPT_LEVEL);
+        ctx.currentData = data;
+        renderFromData(ctx, data);
+        const nQ = data?.meta?.original_circuit_qubits;
+        const depth = data?.meta?.transpiled_depth_layers;
+        const gates = data?.circuit?.gates?.length || 0;
+        const src = qasmSource ? `${qasmSource.type}:${qasmSource.name}` : "unknown";
+        setStatus(`Rendered (${nQ}q, depth ${depth}, gates ${gates}) from ${src}`);
+      } catch (e) {
+        setStatus(`Render failed: ${e}`);
+        console.error(e);
+      }
+    });
+
+    elReset.addEventListener('click', () => {
+      ctx.controls.reset();
+      ctx.camera.position.set(0, -45, 70);
+      ctx.controls.target.set(0, 0, 0);
+      ctx.controls.update();
+    });
+
+    // ---------- BOOT ----------
+    await Promise.all([fetchBackends(), fetchSamples()]);
+    // optional: load a JSON directly for dev
+    const jsonUrl = params.get('data');
+    if (jsonUrl) {
+      try {
+        setStatus(`Loading ${jsonUrl}…`);
+        const res = await fetch(jsonUrl);
+        const data = await res.json();
+        ctx.currentData = data;
+        renderFromData(ctx, data);
+        setStatus(`Rendered from ${jsonUrl}`);
+      } catch (e) {
+        setStatus(`Failed to load ${jsonUrl}: ${e}`);
+      }
+    }
+
+    // enable RENDER if possible
+    enableRenderIfReady();
+  </script>
+</body>
+</html>
