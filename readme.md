@@ -13,6 +13,8 @@ This OpenQASM code can be views in 'Disassembly' window.
 
 Using commands it is possible to render Qiskit and TKET circuits directly in VS Code (Qiskit) or in external browser (TKET).
 
+Support of Quantinuum [guppy](https://docs.quantinuum.com/guppy/)
+
 *These commands can be used only after starting debugging session.*
 
 More information about quantum debugger adapter can be found
