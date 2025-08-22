@@ -16,6 +16,16 @@ import { getUserID, RemoteFileSystemProvider } from './remoteFileSystemProvider'
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { 
+  DetectFnInfo,
+  getConfig,
+  detectFromBackend,
+  compileGuppyFunctions,
+  saveArtifacts
+} from './guppyTools';
+
+import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
+
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
  * Please note: the test suite only supports 'external' mode.
@@ -55,8 +65,6 @@ export function activate(context: vscode.ExtensionContext) {
 			activateMockDebug(context);
 			break;
 	}
-
-
 
 	let remoteFsProvider: RemoteFileSystemProvider | undefined;
 
@@ -99,6 +107,112 @@ export function activate(context: vscode.ExtensionContext) {
 			);
 		})
 	);
+
+	// register CodeLens provider
+	context.subscriptions.push(
+		vscode.languages.registerCodeLensProvider(
+			{ scheme: "file", language: "python" },
+			new GuppyCodeLensProvider()
+		)
+	);
+	log("Registered CodeLens provider");
+
+// register compileOne command
+context.subscriptions.push(vscode.commands.registerCommand(
+  "quantag.guppy.compileOne",
+  async (uri: vscode.Uri, fnName: string) => {
+    const cfg = getConfig();
+    const doc = await vscode.workspace.openTextDocument(uri);
+    const source = doc.getText();
+
+try {
+  const resp = await compileGuppyFunctions(
+    source,
+    [fnName],
+    cfg.formats,
+    cfg.apiBase,
+    cfg.timeoutMs,
+    cfg.insecureTLS
+  );
+
+  // unwrap in case backend response has a "results" field
+	const rawResults = resp.results ?? resp;
+
+	// force it through unknown before narrowing
+	const results = rawResults as unknown as Record<string, Record<string, string>>;
+
+
+	const ws = vscode.workspace.workspaceFolders?.[0];
+	if (!ws) {
+		vscode.window.showErrorMessage("Open a workspace to save outputs.");
+		return;
+	}
+
+	const outRoot = vscode.Uri.joinPath(ws.uri, cfg.outDir);
+	const stem = path.parse(uri.fsPath).name;
+
+	await saveArtifacts(results, outRoot, stem);
+
+	vscode.window.showInformationMessage(
+		`Compiled ${fnName} → saved under ${cfg.outDir}/${stem}/`
+	);
+	} catch (e: any) {
+	vscode.window.showErrorMessage(`Compile failed for ${fnName}: ${e.message || e}`);
+	}
+
+  }
+));
+
+  // compileAllInFile command
+  context.subscriptions.push(vscode.commands.registerCommand("quantag.guppy.compileAllInFile",
+    async (uri: vscode.Uri) => {
+      const cfg = getConfig();
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const source = doc.getText();
+
+      // detect again to ensure fresh list
+      let fns: DetectFnInfo[] = [];
+      try {
+        fns = await detectFromBackend(source, cfg.apiBase, cfg.timeoutMs, cfg.insecureTLS);
+      } catch (e: any) {
+        vscode.window.showErrorMessage(`Detect failed: ${e.message || e}`);
+        return;
+      }
+      const names = fns.map(f => f.name);
+      if (!names.length) { vscode.window.showInformationMessage("No @guppy functions found."); return; }
+
+	try {
+	const resp = await compileGuppyFunctions(
+		source,
+		names,
+		cfg.formats,
+		cfg.apiBase,
+		cfg.timeoutMs,
+		cfg.insecureTLS
+	);
+
+	const results = (resp as any).results ?? resp as Record<string, Record<string, string>>;
+
+	const ws = vscode.workspace.workspaceFolders?.[0];
+	if (!ws) {
+		vscode.window.showErrorMessage("Open a workspace to save outputs.");
+		return;
+	}
+
+	const outRoot = vscode.Uri.joinPath(ws.uri, cfg.outDir);
+	const stem = path.parse(uri.fsPath).name;
+
+	await saveArtifacts(results, outRoot, stem);
+
+	vscode.window.showInformationMessage(
+		`Compiled ${names.length} function(s) → saved under ${cfg.outDir}/${stem}/`
+	);
+	} catch (e: any) {
+	vscode.window.showErrorMessage(`Compile failed: ${e.message || e}`);
+	}
+
+    })
+  );
 
 	context.subscriptions.push(
 	vscode.commands.registerCommand("quantagStudio.show3dVisualizer", async () => {

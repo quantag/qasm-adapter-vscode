@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.89.0",
+  "version": "0.90.0",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
   "author": {
@@ -73,7 +73,10 @@
     "onDebugResolve:mock",
     "onDebugDynamicConfigurations:mock",
     "onCommand:extension.mock-debug.getProgramName",
-    "onStartupFinished"
+    "onStartupFinished",
+    "onLanguage:python",
+    "onCommand:quantag.guppy.compileOne",
+    "onCommand:quantag.guppy.compileAllInFile"
   ],
   "workspaceTrust": {
     "request": "never"
@@ -170,6 +173,16 @@
         "icon": "$(debug-alt)"
       },
       {
+        "command": "quantag.guppy.compileOne",
+        "category": "Quantag Studio",
+        "title": "Compile Guppy Function"
+      },
+      {
+        "command": "quantag.guppy.compileAllInFile",
+        "category": "Quantag Studio",
+        "title": "Compile All Guppy Functions in File"
+      },
+      {
         "command": "quantagStudio.show3dVisualizer",
         "category": "Quantag Studio",
         "title": "3D Circuit Visualizer"
@@ -185,9 +198,9 @@
         "category": "Quantag Studio"
       },
       {
-      "command": "quantagStudio.optimizeQasmPyZX",
-      "title": "Optimize QASM with PyZX",
-      "category": "Quantag Studio"
+        "command": "quantagStudio.optimizeQasmPyZX",
+        "title": "Optimize QASM with PyZX",
+        "category": "Quantag Studio"
       },
       {
         "command": "quantagStudio.renderQasmPyZX",
@@ -210,20 +223,6 @@
         "command": "extension.mock-debug.buildTargetIBMQ",
         "title": "Run on IBM Quantum",
         "category": "Quantag Studio",
-        "icon": "$(play)"
-      },
-      {
-        "command": "extension.mock-debug.buildTargetGoogleSycamore",
-        "title": "Build for Google Sycamore",
-        "category": "Quantag Studio",
-        "enablement": "!inDebugMode",
-        "icon": "$(play)"
-      },
-      {
-        "command": "extension.mock-debug.buildTargetQuantinuumH1",
-        "title": "Build for Quantinuum H1",
-        "category": "Quantag Studio",
-        "enablement": "!inDebugMode",
         "icon": "$(play)"
       },
       {
@@ -288,6 +287,11 @@
         "extensions": [
           ".py"
         ]
+      }
+    ],
+    "codeLensProviders": [
+      {
+        "language": "python"
       }
     ],
     "grammars": [
