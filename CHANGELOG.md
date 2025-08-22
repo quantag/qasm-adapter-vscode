@@ -1,5 +1,9 @@
+## 0.90.0
+* Added support of   Quantinuum [guppy](https://docs.quantinuum.com/guppy/) for guppy functions compilation to HUBR, JSON and STR formats
+
+
 ## 0.89.0
-* Added support of   [ZX-Calculum library](https://zxcalculus.com/) for optimization and rendeing
+* Added support of   [ZX-Calculum library](https://zxcalculus.com/) for optimization and rendering
 
 ## 0.87.0
 * Added 3d Circuit visualization

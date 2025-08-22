@@ -8,7 +8,6 @@ export class GuppyCodeLensProvider implements vscode.CodeLensProvider {
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
   constructor() {
-    // Invalidate cache on edits or save
     vscode.workspace.onDidChangeTextDocument(e => {
       this.cache.delete(e.document.uri.toString());
       this._onDidChangeCodeLenses.fire();
@@ -48,8 +47,8 @@ export class GuppyCodeLensProvider implements vscode.CodeLensProvider {
           lenses.push(
             new vscode.CodeLens(range, {
               title: `Compile ${fn.name}`,
-              command: "quantag.guppy.compileAllInFile",
-              arguments: [document.uri]
+              command: "quantag.guppy.compileOne",
+              arguments: [document.uri, fn.name]  // <-- pass function name
             })
           );
         }
