@@ -25,6 +25,7 @@ import {
 } from './guppyTools';
 
 import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
+import { QasmHoverProvider } from './QasmHoverProvider';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -116,6 +117,14 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 	log("Registered CodeLens provider");
+
+	const langId = "openqasm";
+	const provider = vscode.languages.registerHoverProvider(
+		{ language: langId, scheme: "file" },
+		new QasmHoverProvider()
+	);
+
+  context.subscriptions.push(provider);
 
 	context.subscriptions.push(vscode.commands.registerCommand(
 	"quantag.guppy.compileOne",

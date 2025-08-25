@@ -1,3 +1,7 @@
+## 0.91.0
+* Added QASM Hover Provider. Now when you point mouse over agve in .qasm file you will see its explanation
+
+
 ## 0.90.0
 * Added support of   Quantinuum [guppy](https://docs.quantinuum.com/guppy/) for guppy functions compilation to HUBR, JSON and STR formats
 
