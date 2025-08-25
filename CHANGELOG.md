@@ -1,3 +1,7 @@
+## 0.92.0
+* Added QASM syntaxis highlightning
+
+
 ## 0.91.0
 * Added QASM Hover Provider. Now when you point mouse over agve in .qasm file you will see its explanation
 
