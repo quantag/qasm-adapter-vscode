@@ -1,0 +1,74 @@
+{
+  "scopeName": "source.openqasm",
+  "name": "OpenQASM",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#gates" },
+    { "include": "#preprocessor" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.qasm", "match": "//.*$" },
+        { "name": "comment.block.qasm", "begin": "/\\*", "end": "\\*/", "patterns": [{ "include": "#comments" }] }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        { "name": "string.quoted.double.qasm", "begin": "\"", "end": "\"", "patterns": [{ "name": "constant.character.escape.qasm", "match": "\\\\." }] }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.qasm", "match": "\\b(?:(?:0x[0-9A-Fa-f]+)|(?:\\d+\\.\\d*|\\d*\\.\\d+|\\d+)(?:[eE][\\+\\-]?\\d+)?)\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.qasm",
+          "match": "\\b(?:if|else|for|while|return|break|continue)\\b"
+        },
+        {
+          "name": "keyword.declaration.qasm",
+          "match": "\\b(?:openqasm|include|gate|opaque|measure|barrier|reset|creg|qreg|const|let|def|defcal|cal|delay|box|end|input|output|qubit|bit|angle|bool|int|float|complex)\\b"
+        },
+        {
+          "name": "keyword.operator.qasm",
+          "match": "\\b(?:sin|cos|tan|exp|ln|sqrt|pow|mod|pi)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        { "name": "storage.type.qasm", "match": "\\b(?:qubit|bit|int|uint|float|angle|bool|complex)\\b" },
+        { "name": "storage.modifier.qasm", "match": "\\b(?:const|let|input|output)\\b" }
+      ]
+    },
+    "gates": {
+      "patterns": [
+        {
+          "name": "support.function.gate.qasm",
+          "match": "\\b(?:u3|u2|u1|u|x|y|z|h|s|sdg|t|tdg|rx|ry|rz|p|cp|crx|cry|crz|cu1|cu2|cu3|cx|cy|cz|swap|cswap|ccx|ccz|ecr|id|measure|barrier|delay)\\b"
+        }
+      ]
+    },
+    "preprocessor": {
+      "patterns": [
+        { "name": "meta.preprocessor.qasm", "match": "\\b(?:openqasm\\s+\\d+(?:\\.\\d+)?|include\\s+\"[^\"]+\")" }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        { "name": "variable.other.readwrite.qasm", "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b" }
+      ]
+    }
+  },
+  "fileTypes": ["qasm", "qasm2", "qasm3"],
+  "uuid": "ad3a6f4f-7884-4c9a-9d1b-000000000001"
+}
