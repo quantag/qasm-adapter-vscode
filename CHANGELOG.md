@@ -1,3 +1,6 @@
+## 0.93.0
+* Added python CUDA-Q kernels CodeLens support
+
 ## 0.92.0
 * Added QASM syntaxis highlightning
 

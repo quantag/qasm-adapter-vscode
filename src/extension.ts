@@ -26,6 +26,7 @@ import {
 
 import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
 import { QasmHoverProvider } from './QasmHoverProvider';
+import { CudaQCodeLensProvider } from './cudaqCodeLensProvider';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -80,6 +81,67 @@ export function activate(context: vscode.ExtensionContext) {
 			);
 		}
 	});
+
+ const provider2 = new CudaQCodeLensProvider();
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      [{ language: "python" }, { language: "cpp" }],
+      provider2
+    )
+  );
+
+context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "quantagStudio.cudaq.runKernel",
+      async (args: { kernelName: string; docUri: string }) => {
+        try {
+          const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(args.docUri));
+          const sourceCode = doc.getText();
+
+          // Convert source to base64
+          const srcB64 = Buffer.from(sourceCode, "utf-8").toString("base64");
+
+          // Settings from package.json (workspace config)
+          const apiBase = vscode.workspace.getConfiguration("quantagStudio").get<string>("apiBase") 
+                          || "https://cryspprod3.quantag-it.com:444/api19";
+          const target = vscode.workspace.getConfiguration("quantagStudio").get<string>("cudaqTarget") 
+                          || "qpp-cpu";
+
+          // Call microservice
+          const response = await fetch(apiBase + "/cudaq/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_b64: srcB64,
+              lang: doc.languageId,   // "python" or "cpp"
+              kernel: args.kernelName,
+              target,
+              shots: 1000
+            })
+          });
+
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error("Service error " + response.status + ": " + text);
+          }
+
+          const payload = await response.json();
+
+          if (payload.counts) {
+            log("CUDA-Q result: " + JSON.stringify(payload.counts));
+          } else if (payload.statevector_amplitudes) {
+            log("CUDA-Q statevector returned (" + payload.statevector_amplitudes.length + " amps)");
+          } else {
+            log("CUDA-Q run completed.");
+          }
+
+        } catch (err: any) {
+          log("CUDA-Q call failed: " + err.message);
+        }
+      }
+    )
+  );
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("remoteFiles.openRemote", async () => {

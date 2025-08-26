@@ -1,9 +1,9 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "0.92.0",
+  "version": "0.93.0",
   "publisher": "QuantagITSolutionsGmbH",
-  "description": "Extension for OpenQASM, Qiskit and TKET debug adapters for VS Code.",
+  "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
     "name": "Quantag IT Solutions GmbH"
   },
@@ -11,6 +11,8 @@
   "keywords": [
     "qiskit",
     "tket",
+    "cuda-q",
+    "qasm",
     "python"
   ],
   "engines": {
@@ -75,6 +77,7 @@
     "onCommand:extension.mock-debug.getProgramName",
     "onStartupFinished",
     "onLanguage:python",
+    "onLanguage:cpp",
     "onCommand:quantag.guppy.compileOne",
     "onCommand:quantag.guppy.compileAllInFile"
   ],
@@ -176,6 +179,11 @@
         "command": "quantag.guppy.compileOne",
         "category": "Quantag Studio",
         "title": "Compile Guppy Function"
+      },
+      {
+        "command": "quantagStudio.cudaq.runKernel",
+        "category": "Quantag Studio",
+        "title": "Run CUDA-Q Kernel"
       },
       {
         "command": "quantag.guppy.compileAllInFile",
