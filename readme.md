@@ -15,6 +15,8 @@ Using commands it is possible to render Qiskit and TKET circuits directly in VS 
 
 Support of Quantinuum [guppy](https://docs.quantinuum.com/guppy/) [github](https://github.com/CQCL/guppylang)
 
+Support of [nVidia CUDA-Q](https://developer.nvidia.com/cuda-q) kernels 
+
 *These commands can be used only after starting debugging session.*
 
 More information about quantum debugger adapter can be found
