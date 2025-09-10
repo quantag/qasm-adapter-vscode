@@ -1,6 +1,7 @@
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Config } from './config';
 
 const logger = vscode.window.createOutputChannel("OpenQASM");
 const fs = require('fs');
@@ -101,7 +102,7 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
     };
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
     try {
-      const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/submitFiles", {
+      const response = await fetch(Config["submit.files"], {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -196,7 +197,7 @@ export async function getImage(sessionId: string) {
     sessionId: sessionId
   };
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getImage", {
+    const response = await fetch(Config["get.image"], {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -235,7 +236,7 @@ export async function readConfig(): Promise<any> {
 export async function runOnIBMQ(srcData: string) {
   try {
         var srcDataBase64 = btoa(srcData);
-        const URL = "https://quantum.quantag-it.com/api5/submit_ibm_job";
+        const URL = Config["ibmq.submit"];
         const config = await readConfig(); // read token, user_id, instance, backend
 
         const payload = {
@@ -272,7 +273,7 @@ export async function runZISimulator(srcData: string) {
     src: srcDataBase64
   };
   try {
-    const response = await fetch("https://cryspprod2.quantag-it.com:4043/api2/run", {
+    const response = await fetch(Config["pyzx.optimize"], {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -302,7 +303,7 @@ export async function getHtml(sessionId: string) {
     file: sessionId + ".html"
   };
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getFile", {
+    const response = await fetch(Config["get.file"], {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -324,7 +325,7 @@ export async function getHtml(sessionId: string) {
 
 export async function openCircuitWeb(sessionId: string) {
 		// 	open browser pointing to web frontend
-		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
+		vscode.env.openExternal(vscode.Uri.parse(Config["circuit.web"] + sessionId));
 }
 
 async function  showQirInNewTab(qirText: string) {
@@ -343,7 +344,7 @@ export async function QASMtoQIR(srcData: string) {
     };
 
     try {
-      const response = await fetch("https://api.quantag-it.com/qasm2qir", {
+      const response = await fetch(Config["pyzx.optimize"], {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
