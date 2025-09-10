@@ -656,13 +656,13 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 	
 		if (workspaceFolder) {
 		  const configPath = path.join(workspaceFolder, 'config.json');
-	
+	      
 		  if (fs.existsSync(configPath)) {
 			try {
 			  const configFileContent = await fs.promises.readFile(configPath, 'utf8');
 			  this.config = JSON.parse(configFileContent);
 			  this.parseBackendConfig();
-
+			  log('Loaded config from: ' + configPath);
 			} catch (error) {
 			  log('Failed to load config.json:' + error);
 			}
