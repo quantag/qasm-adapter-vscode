@@ -27,6 +27,7 @@ import {
 import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
 import { QasmHoverProvider } from './QasmHoverProvider';
 import { CudaQCodeLensProvider } from './cudaqCodeLensProvider';
+import { Config } from "./config";
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -38,8 +39,8 @@ const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'server';
 const config = vscode.workspace.getConfiguration('remoteFiles');
 const apiBaseUrl = config.get<string>('baseUrl', 'https://cryspprod3.quantag-it.com/api5');
 let statusBarItem: vscode.StatusBarItem;
-const AUTH_CHECK_URL = "https://cryspprod3.quantag-it.com:444/api10/check_token_ready";
-const AUTH_START_URL = "https://cryspprod3.quantag-it.com:444/api10/google-auth-start";
+const AUTH_CHECK_URL = Config["auth.check"];
+const AUTH_START_URL = Config["auth.start"];
 const AUTH_POLL_INTERVAL = 2000;
 
 
@@ -103,13 +104,11 @@ context.subscriptions.push(
           const srcB64 = Buffer.from(sourceCode, "utf-8").toString("base64");
 
           // Settings from package.json (workspace config)
-          const apiBase = vscode.workspace.getConfiguration("quantagStudio").get<string>("apiBase") 
-                          || "https://cryspprod3.quantag-it.com:444/api19";
           const target = vscode.workspace.getConfiguration("quantagStudio").get<string>("cudaqTarget") 
                           || "qpp-cpu";
 
           // Call microservice
-          const response = await fetch(apiBase + "/cudaq/run", {
+          const response = await fetch(Config["cudaq.run"], {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -285,10 +284,8 @@ context.subscriptions.push(
 		// Step 2: Transpile using cloud API
 		let circuitJson;
 		try {
-			const apiBase = "https://cryspprod3.quantag-it.com:444/api15";
 			const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
-
-			const response = await fetch(apiBase + "/transpile", {
+			const response = await fetch(Config["transpile"], {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -393,7 +390,7 @@ async function optimizeQasmCommandPyZX() {
     const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
 
   try {
-		const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/optimize", {
+		const response = await fetch(Config["pyzx.optimize"], {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ qasm: qasmB64 }),
@@ -432,7 +429,7 @@ async function renderQasmCommandPyZX() {
   
 
   try {
-const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/render", {
+		const response = await fetch(Config["qasm2qir"], {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ qasm: qasmB64 }),
@@ -722,8 +719,8 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 					userId: getUserID()
 				};
 				try {
-					log("send prepareData");
-					const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/prepareData", {
+					log("send prepareData to " + Config["prepare.data"]);
+					const response = await fetch(Config["prepare.data"], {
 						method: 'POST',
 						body: JSON.stringify(payload),
 						headers: {'Content-Type': 'application/json; charset=UTF-8'}
