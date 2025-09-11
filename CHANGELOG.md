@@ -1,3 +1,6 @@
+## 0.99.0
+* opts params in submitFiles
+
 ## 0.95.0
 * Fix relative pathes in submit
 
