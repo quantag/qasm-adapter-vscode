@@ -56,12 +56,14 @@ async function getDirectories(folderPath) {
   return result;
 }
 
-async function getAllFilesInFolder(folderPath, filesData) {
+async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFolder: string) {
   log("getAllFilesInFolder " + folderPath);
   const files = await fsPromises.readdir(folderPath);
 
   // Filter files with .qasm or .py extension
-  const qasmFiles = files.filter(file => (path.extname(file) === '.qasm' || path.extname(file)==='.py'));
+  const qasmFiles = files.filter(file =>
+    (path.extname(file) === '.qasm' || path.extname(file) === '.py')
+  );
 
   for (const file of qasmFiles) {
     const filePath = path.join(folderPath, file);
@@ -72,20 +74,23 @@ async function getAllFilesInFolder(folderPath, filesData) {
     // Encode file contents in base64
     const encodedContents = base64Encode(fileContents);
 
+    // Compute relative path from rootFolder
+    const relPath = path.relative(rootFolder, filePath).replace(/\\/g, "/");
+
     // Add file details to the array
     filesData.push({
-      path: filePath,
+      path: relPath,
       source: encodedContents,
     });
   }
 
-  var subFolders = await getDirectories(folderPath);
+  const subFolders = await getDirectories(folderPath);
   log("Found " + subFolders.length + " subfolders in " + folderPath);
 
-  for(var sub of subFolders) { 
-    await getAllFilesInFolder(sub, filesData);
+  for (const sub of subFolders) {
+    await getAllFilesInFolder(sub, filesData, rootFolder);
   }
-  
+
   return filesData;
 }
 
@@ -93,7 +98,8 @@ async function getAllFilesInFolder(folderPath, filesData) {
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
     const filesData: { path: string; source: string }[] = [];
 
-    await getAllFilesInFolder(folderPath, filesData);
+    await getAllFilesInFolder(folderPath, filesData, rootFolder);
+
       // Prepare the JSON payload
     const payload = {
         sessionId: sessionId,
