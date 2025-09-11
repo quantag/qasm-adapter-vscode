@@ -30,5 +30,13 @@ export const Config: Record<string, string> = {
   // Web frontend
   "circuit.web": "https://quantag-it.com/quantum/#/qcd?id=",
 
-  "getuser.by_googleid": "https://quantum.quantag-it.com/api5/getuser_by_googleid"
+  "getuser.by_googleid": "https://quantum.quantag-it.com/api5/getuser_by_googleid",
+
+  "get.config": "https://quantum.quantag-it.com/api5/get_config"
 };
+// helper to update config dynamically
+export function updateConfig(newCfg: Record<string, string>) {
+  for (const [k, v] of Object.entries(newCfg)) {
+    Config[k] = v;
+  }
+}
