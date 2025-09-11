@@ -94,15 +94,17 @@ async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFol
   return filesData;
 }
 
+type SubmitOpts = {
+  mode?: "desktop" | "web";
+  baseUrl?: string; // QUANTAG_BASE_URL, e.g. "https://cloud.quantag-it.com"
+};
 
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
     const filesData: { path: string; source: string }[] = [];
 
-    if (vscode.env.uiKind === vscode.UIKind.Web) {
-        log("== Web mode ==");
-    } else {
-        log("== Desktop mode ==");
-    }
+    const mode: "desktop" | "web" =
+    vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop";
+    log(mode === "web" ? "== Web mode ==" : "== Desktop mode ==");
     const baseUrl = process.env.QUANTAG_BASE_URL;
     if (baseUrl) {
         log("Running with QUANTAG_BASE_URL=" + baseUrl);
@@ -110,13 +112,19 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
         log("No QUANTAG_BASE_URL");
     }
 
+    // Build SubmitOpts object
+    const opts: SubmitOpts = {
+      mode,
+      baseUrl: baseUrl ?? undefined
+    };
     await getAllFilesInFolder(folderPath, filesData, rootFolder);
 
       // Prepare the JSON payload
     const payload = {
         sessionId: sessionId,
         files: filesData,
-        root: rootFolder
+        root: rootFolder,
+        opts 
     };
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
 
