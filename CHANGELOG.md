@@ -1,3 +1,6 @@
+## 0.94.0
+* Dynamic configuration loading
+
 ## 0.93.0
 * Added python CUDA-Q kernels CodeLens support
 
