@@ -783,7 +783,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			log("SessionId: "+ session.id);
 			
 			log("UserID: "+ getUserID());
-			if(getUserID() !== undefined) {
+			/*if(getUserID() !== undefined) {
 
 				const payload = {
 					sessionId: session.id,
@@ -804,7 +804,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 				} catch (error) {
 					log("Error prepare data:" + error);
 				}
-			}
+			}*/
 			
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 			await sleep(1500);
