@@ -103,6 +103,12 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
     } else {
       log("== Desktop mode ==");
     }
+    const baseUrl = process.env.QUANTAG_BASE_URL;
+    if (baseUrl) {
+      log("Running with QUANTAG_BASE_URL=" + baseUrl);
+    } else {
+      log("No QUANTAG_BASE_URL");
+    }
 
     await getAllFilesInFolder(folderPath, filesData, rootFolder);
 
