@@ -593,6 +593,12 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
 
                 if (resp.ok) {
                     const user = await resp.json();
+					const uid = user.uid?.toString();
+					if (uid) {
+						await context.secrets.store("internalUserId", uid);
+						console.info("Bound internal user:", uid);
+						vscode.window.showInformationMessage(`Logged in as internal user ${uid}`);
+            		}
                     console.info("Bound internal user:", user);
                     vscode.window.showInformationMessage(`Logged in as ${user.uid}`);
                     // optionally store UID for later
@@ -612,25 +618,36 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
 }
 
 function updateLoginStatusBar(context: vscode.ExtensionContext) {
-	console.log("Calling updateLoginStatusBar");
-	context.secrets.get("remoteAuthToken").then(token => {
-		console.log("Got token from secrets:", token);
-		let email = null;
+    console.log("Calling updateLoginStatusBar");
 
-		if (token) {
-			const payload = parseJwt(token);
-			email = payload?.email;
-		}
+    Promise.all([
+        context.secrets.get("remoteAuthToken"),
+        context.secrets.get("internalUserId")
+    ]).then(([token, userId]) => {
+        console.log("Got token from secrets:", token);
+        console.log("Got internalUserId from secrets:", userId);
 
-		statusBarItem.text = email
-			? `Quantag: ${email}`
-			: token
-			? "Quantag: Logged In"
-			: "Quantag: Not Logged In";
+        let email: string | null = null;
 
-		statusBarItem.show();
-	});
+        if (token) {
+            const payload = parseJwt(token);
+            email = payload?.email || null;
+        }
+
+        if (email && userId) {
+            statusBarItem.text = `Quantag: ${email} (uid=${userId})`;
+        } else if (email) {
+            statusBarItem.text = `Quantag: ${email}`;
+        } else if (token) {
+            statusBarItem.text = "Quantag: Logged In";
+        } else {
+            statusBarItem.text = "Quantag: Not Logged In";
+        }
+
+        statusBarItem.show();
+    });
 }
+
 
 
 class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFactory {
