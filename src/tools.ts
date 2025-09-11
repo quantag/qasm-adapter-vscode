@@ -98,6 +98,12 @@ async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFol
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
     const filesData: { path: string; source: string }[] = [];
 
+    if (vscode.env.uiKind === vscode.UIKind.Web) {
+      log("== Web mode ==");
+    } else {
+      log("== Desktop mode ==");
+    }
+
     await getAllFilesInFolder(folderPath, filesData, rootFolder);
 
       // Prepare the JSON payload
