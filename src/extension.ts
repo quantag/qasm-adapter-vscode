@@ -27,7 +27,7 @@ import {
 import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
 import { QasmHoverProvider } from './QasmHoverProvider';
 import { CudaQCodeLensProvider } from './cudaqCodeLensProvider';
-import { Config } from "./config";
+import { Config, updateConfig } from "./config";
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -616,7 +616,27 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
 
     updateLoginStatusBar(context);
 }
+async function getConfigForUser(userId: string): Promise<void> {
+    try {
+        const resp = await fetch(Config["get.config"], {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId })
+        });
 
+        if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(`get_config failed: ${resp.status} ${txt}`);
+        }
+
+        const newCfg = await resp.json();
+        updateConfig(newCfg);
+
+        console.info("Config updated for user", userId, newCfg);
+    } catch (err: any) {
+        console.error("Error in getConfigForUser:", err.message || err);
+    }
+}
 function updateLoginStatusBar(context: vscode.ExtensionContext) {
     console.log("Calling updateLoginStatusBar");
 
@@ -636,6 +656,8 @@ function updateLoginStatusBar(context: vscode.ExtensionContext) {
 
         if (email && userId) {
             statusBarItem.text = `Quantag: ${email} (uid=${userId})`;
+			getConfigForUser(userId);
+
         } else if (email) {
             statusBarItem.text = `Quantag: ${email}`;
         } else if (token) {
