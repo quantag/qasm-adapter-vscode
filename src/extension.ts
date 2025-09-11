@@ -577,6 +577,33 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
         await context.secrets.store("remoteAuthToken", token);
         vscode.window.showInformationMessage("Google login successful.");
 		console.info("Google login successful!");
+
+		        // === Decode token and call backend ===
+        const payload = parseJwt(token);
+        const google_id = payload?.sub;   // Google unique user ID
+        const email = payload?.email;
+
+        if (google_id && email) {
+            try {
+                const resp = await fetch(Config["getuser.by_googleid"], {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ google_id, email })
+                });
+
+                if (resp.ok) {
+                    const user = await resp.json();
+                    console.info("Bound internal user:", user);
+                    vscode.window.showInformationMessage(`Logged in as ${user.uid}`);
+                    // optionally store UID for later
+                    await context.secrets.store("internalUserId", user.uid.toString());
+                } else {
+                    console.error("Failed to bind GoogleID:", await resp.text());
+                }
+            } catch (err) {
+                console.error("Error calling getuser_by_googleid:", err);
+            }
+        }
     } else {
         vscode.window.showErrorMessage("Login timeout. Please try again.");
     }

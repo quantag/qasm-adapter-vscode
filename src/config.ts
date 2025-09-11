@@ -28,5 +28,7 @@ export const Config: Record<string, string> = {
   "qasm2qir": "https://api.quantag-it.com/qasm2qir",
 
   // Web frontend
-  "circuit.web": "https://quantag-it.com/quantum/#/qcd?id="
+  "circuit.web": "https://quantag-it.com/quantum/#/qcd?id=",
+
+  "getuser.by_googleid": "https://quantum.quantag-it.com/api5/getuser_by_googleid"
 };
