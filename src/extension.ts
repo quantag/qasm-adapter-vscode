@@ -770,6 +770,9 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 		// Write to output.
 		log("Starting OpenQASM debugging session..");
+		const version = vscode.extensions.getExtension('QuantagITSolutionsGmbH.openqasm-debug')?.packageJSON.version
+		log("Extension version: v" + version);
+
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 			log("workplaceFolder: " + workplaceFolder);
