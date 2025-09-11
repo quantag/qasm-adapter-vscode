@@ -11,7 +11,7 @@ import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
 import {submitFiles, log, parseJwt} from './tools';
-import { getUserID, RemoteFileSystemProvider } from './remoteFileSystemProvider';
+import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -598,6 +598,7 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
 						await context.secrets.store("internalUserId", uid);
 						console.info("Bound internal user:", uid);
 						vscode.window.showInformationMessage(`Logged in as internal user ${uid}`);
+						setUserID(uid);
             		}
                     console.info("Bound internal user:", user);
                     vscode.window.showInformationMessage(`Logged in as ${user.uid}`);
@@ -657,6 +658,7 @@ function updateLoginStatusBar(context: vscode.ExtensionContext) {
         if (email && userId) {
             statusBarItem.text = `Quantag: ${email} (uid=${userId})`;
 			getConfigForUser(userId);
+			setUserID(userId);
 
         } else if (email) {
             statusBarItem.text = `Quantag: ${email}`;
