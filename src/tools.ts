@@ -99,15 +99,15 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
     const filesData: { path: string; source: string }[] = [];
 
     if (vscode.env.uiKind === vscode.UIKind.Web) {
-      log("== Web mode ==");
+        log("== Web mode ==");
     } else {
-      log("== Desktop mode ==");
+        log("== Desktop mode ==");
     }
     const baseUrl = process.env.QUANTAG_BASE_URL;
     if (baseUrl) {
-      log("Running with QUANTAG_BASE_URL=" + baseUrl);
+        log("Running with QUANTAG_BASE_URL=" + baseUrl);
     } else {
-      log("No QUANTAG_BASE_URL");
+        log("No QUANTAG_BASE_URL");
     }
 
     await getAllFilesInFolder(folderPath, filesData, rootFolder);
@@ -119,8 +119,16 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
         root: rootFolder
     };
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
+
     try {
-      const response = await fetch(Config["submit.files"], {
+      var serverUrl = Config["submit.files"];
+      if (vscode.env.uiKind === vscode.UIKind.Web && baseUrl) {
+            const normalized = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+            serverUrl = `${normalized}/api2/public/submitFiles`;
+            log("Overriding server URL to: " + serverUrl);
+      }
+
+      const response = await fetch(serverUrl, {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
