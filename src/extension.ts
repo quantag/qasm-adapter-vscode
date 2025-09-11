@@ -802,7 +802,6 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}
 			
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
-
 			await sleep(1500);
 		}
 

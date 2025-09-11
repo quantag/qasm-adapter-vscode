@@ -1,3 +1,6 @@
+## 0.95.0
+* Fix relative pathes in submit
+
 ## 0.94.0
 * Dynamic configuration loading
 
