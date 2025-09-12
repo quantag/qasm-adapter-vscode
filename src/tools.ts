@@ -314,7 +314,7 @@ export async function runZISimulator(srcData: string) {
     src: srcDataBase64
   };
   try {
-    const response = await fetch(Config["pyzx.optimize"], {
+    const response = await fetch(Config["zi.run"], {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
