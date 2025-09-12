@@ -718,6 +718,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 
 	  private async loadConfig() {
 		const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+		log("loadConfig from " + workspaceFolder);
 	
 		if (workspaceFolder) {
 		  const configPath = path.join(workspaceFolder, 'config.json');
@@ -770,6 +771,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}).listen(0);
 		}
 
+		this.loadConfig();
 		// Write to output.
 		log("Starting OpenQASM debugging session..");
 		const version = vscode.extensions.getExtension('QuantagITSolutionsGmbH.openqasm-debug')?.packageJSON.version
