@@ -1,3 +1,6 @@
+## 1.0.0
+* load workplace/config.json on every debug session
+
 ## 0.99.0
 * opts params in submitFiles
 
