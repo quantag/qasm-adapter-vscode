@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -158,6 +158,14 @@
         {
           "command": "extension.mock-debug.QASMtoQIR",
           "when": "resourceLangId == python || resourceLangId == openqasm"
+        },
+        {
+          "command": "quantagStudio.authWithGoogle",
+          "when": "quantag.isDesktop"
+        },
+        {
+          "command": "quantagStudio.logout",
+          "when": "quantag.isDesktop"
         }
       ],
       "debug/variables/context": [

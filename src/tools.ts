@@ -314,7 +314,9 @@ export async function runZISimulator(srcData: string) {
     src: srcDataBase64
   };
   try {
-    const response = await fetch(Config["zi.run"], {
+    const endpoint = Config["zi.run"];
+    log("Sending request to " + endpoint);
+    const response = await fetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}

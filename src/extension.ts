@@ -46,6 +46,12 @@ const AUTH_POLL_INTERVAL = 2000;
 
 export function activate(context: vscode.ExtensionContext) {
 
+	// Detect if we are in Web mode
+	const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+
+	// Set a custom context key (true if running in Desktop)
+	vscode.commands.executeCommand('setContext', 'quantag.isDesktop', !isWeb);
+
 	// debug adapters can be run in different ways by using a vscode.DebugAdapterDescriptorFactory:
 	switch (runMode) {
 		case 'server':
@@ -352,8 +358,6 @@ context.subscriptions.push(
 		})
 	);
 
-
-
 	// === Register Quantag Studio Google Auth Command ===
 	context.subscriptions.push(
 		vscode.commands.registerCommand("quantagStudio.authWithGoogle", async () => {
@@ -366,7 +370,7 @@ context.subscriptions.push(
 	statusBarItem.tooltip = "Quantag Studio Google Auth";
 	context.subscriptions.push(statusBarItem);
 
-	statusBarItem.text = "Quantag Studio: Init...";
+	statusBarItem.text = "Quantag Studio";
 	statusBarItem.show();
 
 	updateLoginStatusBar(context); 
@@ -640,6 +644,10 @@ async function getConfigForUser(userId: string): Promise<void> {
 }
 function updateLoginStatusBar(context: vscode.ExtensionContext) {
     console.log("Calling updateLoginStatusBar");
+	const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+	if(isWeb) {
+		return;
+	}
 
     Promise.all([
         context.secrets.get("remoteAuthToken"),
