@@ -23,6 +23,7 @@ export const Config: Record<string, string> = {
   // Backends
   "ibmq.submit": "https://quantum.quantag-it.com/api5/submit_ibm_job",
   "zi.run": "https://cryspprod2.quantag-it.com:4043/api2/run",
+    "qvm.submit": "https://quantum.quantag-it.com/api5/qvm/submit",
 
   // Compiler
   "qasm2qir": "https://api.quantag-it.com/qasm2qir",
