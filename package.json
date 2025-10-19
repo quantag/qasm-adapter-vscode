@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -102,14 +102,24 @@
     "menus": {
       "editor/title/run": [
         {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == openqasm",
+          "group": "navigation@0"
+        },
+        {
           "command": "extension.mock-debug.runEditorContents",
           "when": "resourceLangId == openqasm",
           "group": "navigation@1"
         },
         {
-          "command": "extension.mock-debug.debugEditorContents",
+          "command": "extension.mock-debug.submitEditorContents",
           "when": "resourceLangId == openqasm",
           "group": "navigation@2"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == python",
+          "group": "navigation@0"
         },
         {
           "command": "extension.mock-debug.runEditorContents",
@@ -117,10 +127,11 @@
           "group": "navigation@1"
         },
         {
-          "command": "extension.mock-debug.debugEditorContents",
+          "command": "extension.mock-debug.submitEditorContents",
           "when": "resourceLangId == python",
           "group": "navigation@2"
         }
+
       ],
       "commandPalette": [
         {
@@ -179,9 +190,16 @@
       {
         "command": "extension.mock-debug.debugEditorContents",
         "title": "Debug Circuit",
-        "category": "Mock Debug",
+        "category": "Quantag Studio",
         "enablement": "!inDebugMode",
-        "icon": "$(debug-alt)"
+        "icon": "$(play)"
+      },
+      {
+        "command": "extension.mock-debug.submitEditorContents",
+        "title": "Submit Circuit",
+        "category": "Quantag Studio",
+        "enablement": "!inDebugMode",
+        "icon": "$(play)"
       },
       {
         "command": "quantag.guppy.compileOne",
@@ -231,7 +249,7 @@
       {
         "command": "extension.mock-debug.runEditorContents",
         "title": "Run Circuit",
-        "category": "Mock Debug",
+        "category": "Quantag Studio",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
       },
