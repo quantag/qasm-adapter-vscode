@@ -23,6 +23,7 @@ export function setSessionID(sessionID: string) {
 export function activateMockDebug(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {
 
 	context.subscriptions.push(
+		// Run circuit
 		vscode.commands.registerCommand('extension.mock-debug.runEditorContents', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
@@ -39,7 +40,24 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				);
 			}
 		}),
+		// Debug circuit
 		vscode.commands.registerCommand('extension.mock-debug.debugEditorContents', (resource: vscode.Uri) => {
+			let targetResource = resource;
+			if (!targetResource && vscode.window.activeTextEditor) {
+				targetResource = vscode.window.activeTextEditor.document.uri;
+			}
+			if (targetResource) {
+				vscode.debug.startDebugging(undefined, {
+					type: 'mock',
+					name: 'Debug File',
+					request: 'launch',
+					program: targetResource.fsPath,
+					stopOnEntry: true
+				});
+			}
+		}),
+				// Debug circuit
+		vscode.commands.registerCommand('extension.mock-debug.submitEditorContents', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
 				targetResource = vscode.window.activeTextEditor.document.uri;
