@@ -207,6 +207,11 @@
         "title": "Compile Guppy Function"
       },
       {
+        "command": "quantag.studio.viewJobs",
+        "category": "Quantag Studio",
+        "title": "View Jobs"
+      },
+      {
         "command": "quantagStudio.cudaq.runKernel",
         "category": "Quantag Studio",
         "title": "Run CUDA-Q Kernel"
