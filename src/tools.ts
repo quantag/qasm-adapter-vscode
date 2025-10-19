@@ -296,17 +296,226 @@ export async function runOnIBMQ(srcData: string) {
             headers: {'Content-Type': 'application/json; charset=UTF-8'}
         });
 
-          if (!response.ok) {
+        if (!response.ok) {
             log("reponse is not ok: " + response.status + " - " + response.statusText);
-          } else {
-            const responseData = await response.json(); // 🔥 await this!
+        } else {
+            const responseData = await response.json(); // await this!
             log("Successfully submitted job to IBM. Check status at https://quantum.quantag-it.com/profile");
             log("Response JSON: " + JSON.stringify(responseData, null, 2));
-          }
+        }
   } catch (error) {
       log("Error :" + error);
   }
 }
+
+/*
+export async function submitJobGeneral(srcData: string) {
+  try {
+        var srcDataBase64 = btoa(srcData);
+        const URL = Config["submit.job"];
+        const config = await readConfig(); // read token, user_id, instance, backend
+
+        const payload = {
+            qasm: srcDataBase64,
+            user_id: config.user_id,
+            instance: config.instance,
+            token: config.token,
+            backend: config.backend
+        };
+       // log("Submitting job to: " + URL);
+       // log("Request payload: " + JSON.stringify(payload, null, 2));
+
+        const response = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {'Content-Type': 'application/json; charset=UTF-8'}
+        });
+
+        if (!response.ok) {
+            log("reponse is not ok: " + response.status + " - " + response.statusText);
+        } else {
+            const responseData = await response.json(); // await this!
+            log("Successfully submitted job. Check status at https://quantum.quantag-it.com/profile");
+            log("Response JSON: " + JSON.stringify(responseData, null, 2));
+        }
+  } catch (error) {
+      log("Error :" + error);
+  }
+}*/
+
+// submitJobGeneral.ts
+
+// Types are optional but help avoid mistakes
+type SubmitExecution = {
+  mode?: "sampler" | "estimator";
+  shots?: number;
+};
+
+type SubmitOptionsIBM = {
+  token: string;
+  instance: string;
+  device: string; // e.g. "ibm_brisbane"
+};
+
+type SubmitPayload = {
+  apikey: string;
+  src: string;           // base64
+  src_type: string;      // "qasm" by default
+  execution: SubmitExecution;
+  backend: "ibm" | "cudaq";
+  options: Record<string, unknown>; // provider-specific
+};
+
+async function pollJobUntilDone(jobUid: string, apikey: string) {
+  const baseUrl = "https://quantum.quantag-it.com/api5/qvm/job";
+  let delay = 1000;
+  const maxDelay = 8000;
+  const maxTimeMs = 3 * 60 * 1000; // 3 min
+  const t0 = Date.now();
+
+  while (true) {
+    const resp = await fetch(`${baseUrl}/${encodeURIComponent(jobUid)}`, {
+      method: "GET",
+      headers: {
+        "X-API-Key": apikey,
+        "Accept": "application/json"
+      }
+    });
+
+    const text = await resp.text();
+    let json: any = null;
+    try { json = text ? JSON.parse(text) : null; } catch {}
+
+    if (!resp.ok) {
+      log(`Status check failed: ${resp.status} ${resp.statusText} ${text}`);
+      return { ok: false, error: text || resp.statusText };
+    }
+
+    const st = String(json?.status || "");
+    if (st === "DONE") {
+      log("Job finished. Results received.");
+      return { ok: true, data: json };
+    }
+    if (st === "ERROR") {
+      log("Job ended with ERROR.");
+      return { ok: false, error: JSON.stringify(json) };
+    }
+
+    if (Date.now() - t0 > maxTimeMs) {
+      log("Timeout waiting for job.");
+      return { ok: false, error: "timeout" };
+    }
+
+    await new Promise(r => setTimeout(r, delay));
+    delay = Math.min(maxDelay, Math.round(delay * 1.6));
+  }
+}
+
+export function openJobsDashboard() {
+  vscode.env.openExternal(vscode.Uri.parse("https://cloud.quantag-it.com/jobs"));
+}
+
+export async function submitJobGeneral(srcData: string) {
+  try {
+     const cfg = await readConfig();
+    // Prefer Config["qvm.submit"]; fallback to legacy key if needed
+    const url =
+      (globalThis as any).Config?.["qvm.submit"] ??
+      cfg.submit_url ??
+      "https://quantum.quantag-it.com/api5/qvm/submit";
+
+    // Expecting these fields in your config:
+    // apikey, backend, mode, shots, src_type,
+    // token, instance, device (for IBM)
+
+
+    // Base64 encode using Buffer (handles UTF-8 safely)
+    const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
+
+    // Build provider-specific options
+    let options: Record<string, unknown> = {};
+    if ((cfg.backend || "").toLowerCase() === "ibm") {
+      // Validate required IBM fields early for clearer errors
+      if (!cfg.token || !cfg.instance || !cfg.device) {
+        log(
+          "Missing IBM options: token, instance, or device. Check your config."
+        );
+        return;
+      }
+      options = {
+        token: cfg.token,
+        instance: cfg.instance,
+        device: cfg.device,
+      } as SubmitOptionsIBM;
+    } else if ((cfg.backend || "").toLowerCase() === "cudaq") {
+      options = {};
+    } else {
+      log("Unsupported backend in config: " + cfg.backend);
+      return;
+    }
+
+    const payload: SubmitPayload = {
+      apikey: cfg.apikey,
+      src: srcBase64,
+      src_type: "qasm",
+      execution: {
+        mode: (cfg.mode || "sampler").toLowerCase(),
+        shots: Number.isFinite(cfg.shots) ? Number(cfg.shots) : 1024,
+      },
+      backend: (cfg.backend || "cudaq").toLowerCase(),
+      options,
+    };
+
+    log("Submitting job to: " + url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8"
+        // You can also send the key via header; server accepts either
+       // "X-API-Key": String(cfg.apikey || ""),
+      },
+    });
+
+    let text = await response.text();
+    let json: any = null;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      // keep raw text if JSON parse fails
+    }
+
+    if (!response.ok) {
+      log(
+        "Submit failed: " +
+          response.status +
+          " " +
+          response.statusText +
+          (json ? " " + JSON.stringify(json) : " " + text)
+      );
+      return;
+    }
+
+    const jobUid = json.job_uid;
+    log(`Job queued: ${jobUid}`);
+    log("Check status at https://cloud.quantag-it.com/jobs");
+    // Poll for result using your /qvm/job route (requires API key). 
+    const res = await pollJobUntilDone(jobUid, cfg.apikey);
+    if (!res.ok) {
+      log("Result error: " + res.error);
+      return;
+    }
+
+    // Pretty-print results
+    log("Result JSON:");
+    log(JSON.stringify(res.data, null, 2));
+
+  } catch (err: any) {
+    log("Submit error: " + (err?.message || String(err)));
+  }
+}
+
 
 export async function runZISimulator(srcData: string) {
   var srcDataBase64 = btoa(srcData);

@@ -10,7 +10,7 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log, parseJwt} from './tools';
+import {submitFiles, log, parseJwt, openJobsDashboard} from './tools';
 import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
 
 import * as fs from 'fs';
@@ -28,6 +28,7 @@ import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
 import { QasmHoverProvider } from './QasmHoverProvider';
 import { CudaQCodeLensProvider } from './cudaqCodeLensProvider';
 import { Config, updateConfig } from "./config";
+import { openJobsPanel } from './jobsPanel';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -191,7 +192,7 @@ context.subscriptions.push(
 		new QasmHoverProvider()
 	);
 
-  context.subscriptions.push(provider);
+  	context.subscriptions.push(provider);
 
 	context.subscriptions.push(vscode.commands.registerCommand(
 	"quantag.guppy.compileOne",
@@ -224,6 +225,12 @@ context.subscriptions.push(
 	}
 	));
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand("quantag.studio.viewJobs", async () => {
+		await openJobsPanel(context);
+		})
+	);
+	
 
   // compileAllInFile command
   context.subscriptions.push(vscode.commands.registerCommand("quantag.guppy.compileAllInFile",
@@ -380,6 +387,33 @@ export function deactivate() {
 	// nothing to do
 }
 
+/*
+	function getWebviewContent(url: string): string {
+	// IMPORTANT: sandboxing/iframe prevents most security issues,
+	// but some sites may block embedding with X-Frame-Options.
+	return  `
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src ${url}; style-src 'unsafe-inline';">
+		<style>
+			html, body, iframe {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			border: none;
+			}
+		</style>
+		</head>
+		<body>
+		<iframe src="${url}" frameborder="0"></iframe>
+		</body>
+		</html>
+	`;
+	}
+*/
 
 async function optimizeQasmCommandPyZX() {
 	// Step 1: Read QASM from active file 
