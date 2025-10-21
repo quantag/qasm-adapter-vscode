@@ -66,19 +66,29 @@ function decodeMaybeBase64ToText(s: string): string {
 }
 
 async function saveTextToFile(defaultName: string, content: string, panel: vscode.WebviewPanel) {
-  const uri = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(defaultName) });
+  const uri = await vscode.window.showSaveDialog(
+    { 
+      defaultUri: vscode.Uri.file(defaultName) 
+    }
+  );
   if (!uri) return;
   await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
   vscode.window.showInformationMessage("Saved: " + uri.fsPath);
 }
 
 async function saveJsonToFile(defaultName: string, obj: any) {
-  const uri = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(defaultName) });
+  const uri = await vscode.window.showSaveDialog({
+    defaultUri: vscode.Uri.file(defaultName),
+      filters: {
+        "JSON files": ["json"],
+      },
+    });
   if (!uri) return;
   const pretty = JSON.stringify(obj, null, 2);
   await vscode.workspace.fs.writeFile(uri, Buffer.from(pretty, "utf8"));
   vscode.window.showInformationMessage("Saved: " + uri.fsPath);
 }
+
 
 async function deleteJob(apikey: string, jobUid: string): Promise<void> {
   const url = `https://quantum.quantag-it.com/api5/qvm/job/${encodeURIComponent(jobUid)}`;
