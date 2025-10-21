@@ -387,33 +387,6 @@ export function deactivate() {
 	// nothing to do
 }
 
-/*
-	function getWebviewContent(url: string): string {
-	// IMPORTANT: sandboxing/iframe prevents most security issues,
-	// but some sites may block embedding with X-Frame-Options.
-	return  `
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-		<meta charset="UTF-8">
-		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src ${url}; style-src 'unsafe-inline';">
-		<style>
-			html, body, iframe {
-			width: 100%;
-			height: 100%;
-			margin: 0;
-			padding: 0;
-			border: none;
-			}
-		</style>
-		</head>
-		<body>
-		<iframe src="${url}" frameborder="0"></iframe>
-		</body>
-		</html>
-	`;
-	}
-*/
 
 async function optimizeQasmCommandPyZX() {
 	// Step 1: Read QASM from active file 
