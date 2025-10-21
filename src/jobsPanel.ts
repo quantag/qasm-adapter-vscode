@@ -144,17 +144,6 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
     }
   }
 
-  /*
-  panel.webview.onDidReceiveMessage(async (msg) => {
-    if (msg?.type === "refresh") {
-      await refresh();
-    } else if (msg?.type === "openDashboard") {
-      vscode.env.openExternal(vscode.Uri.parse(dashboardUrl));
-    } else if (msg?.type === "copy") {
-      await vscode.env.clipboard.writeText(String(msg.value || ""));
-      vscode.window.showInformationMessage("Copied to clipboard.");
-    }
-  });*/
 
   panel.webview.onDidReceiveMessage(async (msg) => {
   try {
@@ -167,31 +156,32 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage("Copied to clipboard.");
     } else if (msg?.type === "downloadResults") {
       const uid = String(msg.uid || "");
-      if (!uid) throw new Error("Missing job UID");
+      if (!uid) {throw new Error("Missing job UID");}
+
       const details = await getJobDetails(apikey, uid);
       // Try common shapes: {results: ...} or just the result object
       const results = details?.results ?? details?.data ?? details;
       await saveJsonToFile(`${uid}_results.json`, results);
     } else if (msg?.type === "downloadInput") {
-      const uid = String(msg.uid || "");
-      if (!uid) throw new Error("Missing job UID");
-      const details = await getJobDetails(apikey, uid);
-      // Try common keys: "input" (text), "qasm_b64" (base64), or nested
-      const rawInput =
-        details?.input ??
-        details?.qasm_b64 ??
-        details?.data?.input ??
-        "";
-      if (!rawInput) throw new Error("Input not found on job");
-      const text = decodeMaybeBase64ToText(String(rawInput));
-      await saveTextToFile(`${uid}.qasm`, text, panel);
+        const uid = String(msg.uid || "");
+        if (!uid) throw new Error("Missing job UID");
+        const details = await getJobDetails(apikey, uid);
+        // Try common keys: "input" (text), "qasm_b64" (base64), or nested
+        const rawInput =
+          details?.input ??
+          details?.qasm_b64 ??
+          details?.data?.input ??
+          "";
+        if (!rawInput) throw new Error("Input not found on job");
+        const text = decodeMaybeBase64ToText(String(rawInput));
+        await saveTextToFile(`${uid}.qasm`, text, panel);
     } else if (msg?.type === "deleteJob") {
       const uid = String(msg.uid || "");
       if (!uid) throw new Error("Missing job UID");
       const ok = await vscode.window.showWarningMessage(
-        `Delete job ${uid}?`,
-        { modal: true },
-        "Delete"
+          `Delete job ${uid}?`,
+          { modal: true },
+          "Delete"
       );
       if (ok === "Delete") {
         await deleteJob(apikey, uid);

@@ -420,14 +420,13 @@ export async function submitJobGeneral(srcData: string) {
      const cfg = await readConfig();
     // Prefer Config["qvm.submit"]; fallback to legacy key if needed
     const url =
-      (globalThis as any).Config?.["qvm.submit"] ??
-      cfg.submit_url ??
-      "https://quantum.quantag-it.com/api5/qvm/submit";
+        (globalThis as any).Config?.["qvm.submit"] ??
+        cfg.submit_url ??
+        "https://quantum.quantag-it.com/api5/qvm/submit";
 
     // Expecting these fields in your config:
     // apikey, backend, mode, shots, src_type,
     // token, instance, device (for IBM)
-
 
     // Base64 encode using Buffer (handles UTF-8 safely)
     const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
@@ -500,16 +499,18 @@ export async function submitJobGeneral(srcData: string) {
     const jobUid = json.job_uid;
     log(`Job queued: ${jobUid}`);
     log("Check status at https://cloud.quantag-it.com/jobs");
+
     // Poll for result using your /qvm/job route (requires API key). 
-    const res = await pollJobUntilDone(jobUid, cfg.apikey);
+  /*  const res = await pollJobUntilDone(jobUid, cfg.apikey);
     if (!res.ok) {
       log("Result error: " + res.error);
       return;
     }
-
     // Pretty-print results
     log("Result JSON:");
     log(JSON.stringify(res.data, null, 2));
+*/
+  await showJobsPanel();
 
   } catch (err: any) {
     log("Submit error: " + (err?.message || String(err)));
@@ -620,3 +621,8 @@ export async function QASMtoQIR(srcData: string) {
     }
 
 }
+
+export async function showJobsPanel() {
+  await vscode.commands.executeCommand('quantag.studio.viewJobs');
+}
+

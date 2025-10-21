@@ -1,3 +1,10 @@
+## 1.0.6
+* Open Jobs panel on Job submit
+
+
+## 1.0.5
+* Jobs managements in VS Code
+
 ## 1.0.0
 * load workplace/config.json on every debug session
 
