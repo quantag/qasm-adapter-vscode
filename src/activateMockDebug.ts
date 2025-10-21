@@ -56,7 +56,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),
-				// Debug circuit
+		// Debug circuit
 		vscode.commands.registerCommand('extension.mock-debug.submitEditorContents', (resource: vscode.Uri) => {
 			const editor = vscode.window.activeTextEditor;
 
