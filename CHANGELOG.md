@@ -1,3 +1,6 @@
+## 1.0.8
+* Changed format for submitJob: src, config
+
 ## 1.0.6
 * Open Jobs panel on Job submit
 

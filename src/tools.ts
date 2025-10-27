@@ -417,52 +417,20 @@ export function openJobsDashboard() {
 
 export async function submitJobGeneral(srcData: string) {
   try {
-     const cfg = await readConfig();
-    // Prefer Config["qvm.submit"]; fallback to legacy key if needed
+    const cfg = await readConfig();
+
     const url =
-        (globalThis as any).Config?.["qvm.submit"] ??
-        cfg.submit_url ??
-        "https://quantum.quantag-it.com/api5/qvm/submit";
+      (globalThis as any).Config?.["qvm.submit"] ??
+      cfg.submit_url ??
+      "https://quantum.quantag-it.com/api5/qvm/submit";
 
-    // Expecting these fields in your config:
-    // apikey, backend, mode, shots, src_type,
-    // token, instance, device (for IBM)
-
-    // Base64 encode using Buffer (handles UTF-8 safely)
+    // Base64 encode QASM
     const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
 
-    // Build provider-specific options
-    let options: Record<string, unknown> = {};
-    if ((cfg.backend || "").toLowerCase() === "ibm") {
-      // Validate required IBM fields early for clearer errors
-      if (!cfg.token || !cfg.instance || !cfg.device) {
-        log(
-          "Missing IBM options: token, instance, or device. Check your config."
-        );
-        return;
-      }
-      options = {
-        token: cfg.token,
-        instance: cfg.instance,
-        device: cfg.device,
-      } as SubmitOptionsIBM;
-    } else if ((cfg.backend || "").toLowerCase() === "cudaq") {
-      options = {};
-    } else {
-      log("Unsupported backend in config: " + cfg.backend);
-      return;
-    }
-
-    const payload: SubmitPayload = {
-      apikey: cfg.apikey,
+    // Just send config as-is
+    const payload = {
       src: srcBase64,
-      src_type: "qasm",
-      execution: {
-        mode: (cfg.mode || "sampler").toLowerCase(),
-        shots: Number.isFinite(cfg.shots) ? Number(cfg.shots) : 1024,
-      },
-      backend: (cfg.backend || "cudaq").toLowerCase(),
-      options,
+      config: cfg,
     };
 
     log("Submitting job to: " + url);
@@ -471,51 +439,37 @@ export async function submitJobGeneral(srcData: string) {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
-        "Content-Type": "application/json; charset=UTF-8"
-        // You can also send the key via header; server accepts either
-       // "X-API-Key": String(cfg.apikey || ""),
+        "Content-Type": "application/json; charset=UTF-8",
       },
     });
 
-    let text = await response.text();
+    const text = await response.text();
     let json: any = null;
     try {
       json = text ? JSON.parse(text) : null;
     } catch {
-      // keep raw text if JSON parse fails
+      /* ignore JSON parse error */
     }
 
     if (!response.ok) {
       log(
-        "Submit failed: " +
-          response.status +
-          " " +
-          response.statusText +
-          (json ? " " + JSON.stringify(json) : " " + text)
+        `Submit failed: ${response.status} ${response.statusText} ${
+          json ? JSON.stringify(json) : text
+        }`
       );
       return;
     }
 
-    const jobUid = json.job_uid;
+    const jobUid = json?.job_uid ?? json?.action_id ?? "(no id)";
     log(`Job queued: ${jobUid}`);
     log("Check status at https://cloud.quantag-it.com/jobs");
 
-    // Poll for result using your /qvm/job route (requires API key). 
-  /*  const res = await pollJobUntilDone(jobUid, cfg.apikey);
-    if (!res.ok) {
-      log("Result error: " + res.error);
-      return;
-    }
-    // Pretty-print results
-    log("Result JSON:");
-    log(JSON.stringify(res.data, null, 2));
-*/
-  await showJobsPanel();
-
+    await showJobsPanel();
   } catch (err: any) {
     log("Submit error: " + (err?.message || String(err)));
   }
 }
+
 
 
 export async function runZISimulator(srcData: string) {
