@@ -440,7 +440,7 @@ async function renderQasmCommandPyZX() {
   
 
   try {
-		const response = await fetch(Config["qasm2qir"], {
+		const response = await fetch(Config["pyzx.render"], {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ qasm: qasmB64 }),

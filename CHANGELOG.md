@@ -1,3 +1,7 @@
+## 1.0.9
+* fixed config parameters mapping
+
+
 ## 1.0.8
 * Changed format for submitJob: src, config
 

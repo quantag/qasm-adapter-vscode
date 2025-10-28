@@ -237,15 +237,18 @@ export async function getImage(sessionId: string) {
   const payload = {
     sessionId: sessionId
   };
+    const url = Config["get.image"];
+
+  log("session = " +sessionId + " send " + JSON.stringify(payload) + " to " + url);
   try {
-    const response = await fetch(Config["get.image"], {
+    const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
     });
 
     if (!response.ok) {
-       log("reponse is not ok: ${response.status} - ${response.statusText}");
+       log(`reponse from ${url} is not ok: ${response.status} - ${response.statusText}`);
     }
 
     const responseData = await response.json();
@@ -551,7 +554,7 @@ export async function QASMtoQIR(srcData: string) {
     };
 
     try {
-      const response = await fetch(Config["pyzx.optimize"], {
+      const response = await fetch(Config["qasm2qir"], {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}

@@ -141,7 +141,6 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			if (!targetResource && vscode.window.activeTextEditor) {
 				targetResource = vscode.window.activeTextEditor.document.uri;
 			}
-			QASMtoQIR(currentSessionID);
 			getImage(currentSessionID);
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.getCircuitHtml', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
