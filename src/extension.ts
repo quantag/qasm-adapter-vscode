@@ -426,7 +426,118 @@ async function optimizeQasmCommandPyZX() {
   }
 }
 
+function detectQasmType(qasmSource: string): number {
+	/**
+	 * Detects whether the given source is OpenQASM 2 or 3.
+	 * Returns:
+	 *   0 → QASM 2
+	 *   1 → QASM 3
+	 *  -1 → Unknown / not QASM
+	 */
+	if (!qasmSource) return -1;
+
+	const text = qasmSource.trim();
+
+	// Normalize line endings and remove comments
+	const clean = text
+		.replace(/\r/g, "")
+		.replace(/\/\/.*$/gm, "")
+		.replace(/\/\*[\s\S]*?\*\//g, "")
+		.trim();
+
+	// Direct header match
+	if (/^OPENQASM\s+3(\.0)?\s*;/i.test(clean)) return 1;
+	if (/^OPENQASM\s+2(\.0)?\s*;/i.test(clean)) return 0;
+
+	// Heuristics
+	if (/\binclude\s+"stdgates\.inc"/i.test(clean)) return 1;
+	if (/\bqubit\s*\[/i.test(clean)) return 1;     // QASM 3 allows qubit arrays
+	if (/\bqubit\s+[a-zA-Z_]/i.test(clean)) return 1;
+	if (/\bif\s*\(.*==\s*(true|false)\)/i.test(clean)) return 1; // QASM 3 boolean if
+	if (/\bcreg\b|\bqreg\b/i.test(clean)) return 0;               // QASM 2 register syntax
+	if (/\bmeasure\s+[a-zA-Z_]+\s*->\s*[a-zA-Z_]+/i.test(clean)) return 0;
+
+	return -1; // could not decide
+}
+
+
 async function renderQasmCommandPyZX() {
+	// Step 1: Read QASM from active file 
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return;
+	}
+
+	const qasm = editor.document.getText();
+	if (!qasm) {
+		vscode.window.showErrorMessage("File is empty");
+		return;
+	}
+
+	// Encode source to base64
+	const srcB64 = Buffer.from(qasm, "utf-8").toString("base64");
+
+	// Detect type from file extension
+	const srcType = detectQasmType(qasm);
+	const url = Config["pyzx.render2"];
+    log(`srcType = ${srcType} url = ${url}`);
+	try {
+		const response = await fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ src: srcB64, type: srcType }),
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error(`Render failed (${response.status}): ${text}`);
+		}
+
+		const result = await response.json();
+		const imageB64 = result.image;
+
+		if (!imageB64) {
+			throw new Error("No image returned from backend");
+		}
+
+		const panel = vscode.window.createWebviewPanel(
+			"qasmDiagram",
+			"QASM Diagram",
+			vscode.ViewColumn.Beside,
+			{ enableScripts: true }
+		);
+
+		panel.webview.html = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body {
+					margin: 0;
+					background: #1e1e1e;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					height: 100vh;
+				}
+				img {
+					max-width: 100%;
+					max-height: 100%;
+				}
+			</style>
+		</head>
+		<body>
+			<img src="data:image/png;base64,${imageB64}" />
+		</body>
+		</html>`;
+	} catch (err: any) {
+		vscode.window.showErrorMessage("Rendering failed: " + err.message);
+	}
+}
+
+/*
+async function renderQasmCommandPyZX_() {
 	// Step 1: Read QASM from active file 
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) {
@@ -475,7 +586,7 @@ async function renderQasmCommandPyZX() {
   } catch (err: any) {
     vscode.window.showErrorMessage("Rendering failed: " + err.message);
   }
-}
+}*/
 
 function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscode.WebviewPanel): string {
   const webview = panel.webview;
@@ -628,6 +739,7 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
 
     updateLoginStatusBar(context);
 }
+
 async function getConfigForUser(userId: string): Promise<void> {
     try {
         const resp = await fetch(Config["get.config"], {
@@ -744,6 +856,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			  this.config = JSON.parse(configFileContent);
 			  this.parseBackendConfig();
 			  log('Loaded config from: ' + configPath);
+
 			} catch (error) {
 			  log('Failed to load config.json:' + error);
 			}

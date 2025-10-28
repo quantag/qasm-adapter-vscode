@@ -311,40 +311,6 @@ export async function runOnIBMQ(srcData: string) {
   }
 }
 
-/*
-export async function submitJobGeneral(srcData: string) {
-  try {
-        var srcDataBase64 = btoa(srcData);
-        const URL = Config["submit.job"];
-        const config = await readConfig(); // read token, user_id, instance, backend
-
-        const payload = {
-            qasm: srcDataBase64,
-            user_id: config.user_id,
-            instance: config.instance,
-            token: config.token,
-            backend: config.backend
-        };
-       // log("Submitting job to: " + URL);
-       // log("Request payload: " + JSON.stringify(payload, null, 2));
-
-        const response = await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'}
-        });
-
-        if (!response.ok) {
-            log("reponse is not ok: " + response.status + " - " + response.statusText);
-        } else {
-            const responseData = await response.json(); // await this!
-            log("Successfully submitted job. Check status at https://quantum.quantag-it.com/profile");
-            log("Response JSON: " + JSON.stringify(responseData, null, 2));
-        }
-  } catch (error) {
-      log("Error :" + error);
-  }
-}*/
 
 // submitJobGeneral.ts
 

@@ -1,3 +1,6 @@
+## 1.0.10
+* openqasm2/3 rendering with PyZX
+
 ## 1.0.9
 * fixed config parameters mapping
 
