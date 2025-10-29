@@ -1,5 +1,6 @@
 // jobsPanel.ts
 import * as vscode from "vscode";
+import { log } from "./tools";
 
 type JobRow = {
   job_uid: string;
@@ -131,18 +132,27 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
 
   const cfg = await readConfig();
   const apikey = String(cfg.apikey || "");
-  const dashboardUrl = String(cfg.jobs_dashboard || "https://cloud.quantag-it.com/jobs");
+  const dashboardUrl = "https://cloud.quantag-it.com/jobs";
 
   panel.webview.html = getWebviewHtml(dashboardUrl);
+  // check if API key is missing
+  if (!apikey) {
+    log("Please specify apikey in your configuration file.");
+    panel.webview.postMessage({
+      type: "error",
+      error: "Missing API key. Please specify 'apikey' in your configuration."
+    });
+    return;
+  }
 
   // resolve user_id once
   let userId: string;
   try {
     // if your config already has user_id, you can skip the call
-    userId = String(cfg.user_id || await getUserIdFromApiKey(apikey));
+      userId = await getUserIdFromApiKey(apikey);
   } catch (e: any) {
-    panel.webview.postMessage({ type: "error", error: e?.message || String(e) });
-    return;
+      panel.webview.postMessage({ type: "error", error: e?.message || String(e) });
+      return;
   }
 
   async function refresh() {

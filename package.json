@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -252,12 +252,6 @@
         "title": "Run Circuit",
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
-        "icon": "$(play)"
-      },
-      {
-        "command": "extension.mock-debug.buildTargetIBMQ",
-        "title": "Run on IBM Quantum",
-        "category": "Quantag Studio",
         "icon": "$(play)"
       },
       {

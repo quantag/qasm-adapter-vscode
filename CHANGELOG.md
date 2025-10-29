@@ -1,3 +1,6 @@
+## 1.0.11
+* removed dedicated comamnd to submit job to IBMQ, instead use special config and general Submit
+
 ## 1.0.10
 * openqasm2/3 rendering with PyZX
 
