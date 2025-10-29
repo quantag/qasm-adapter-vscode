@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -58,16 +58,16 @@
     "@vscode/debugadapter-testsupport": "^1.56.0",
     "await-notify": "^1.0.1",
     "base64-js": "^1.5.1",
-    "esbuild": "^0.14.54",
+    "esbuild": "^0.25.11",
     "eslint": "^8.12.0",
     "events": "^3.3.0",
     "glob": "^7.2.0",
-    "mocha": "^9.2.2",
+    "mocha": "^11.7.4",
     "path-browserify": "^1.0.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.6.3",
     "url": "^0.11.0",
-    "vsce": "^2.7.0"
+    "vsce": "^2.15.0"
   },
   "main": "./dist/extension.js",
   "browser": "./dist/web-extension.js",
@@ -131,7 +131,6 @@
           "when": "resourceLangId == python",
           "group": "navigation@2"
         }
-
       ],
       "commandPalette": [
         {
