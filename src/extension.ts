@@ -10,7 +10,7 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log, parseJwt, openJobsDashboard} from './tools';
+import {submitFiles, log, parseJwt, openJobsDashboard, readConfig} from './tools';
 import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
 
 import * as fs from 'fs';
@@ -843,30 +843,21 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		this.loadConfig(); // Load config when the factory is created
 	  }
 
-	  private async loadConfig() {
-		const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-		log("loadConfig from " + workspaceFolder);
-	
-		if (workspaceFolder) {
-		  const configPath = path.join(workspaceFolder, 'config.json');
-	      
-		  if (fs.existsSync(configPath)) {
-			try {
-			  const configFileContent = await fs.promises.readFile(configPath, 'utf8');
-			  this.config = JSON.parse(configFileContent);
-			  this.parseBackendConfig();
-			  log('Loaded config from: ' + configPath);
+	private async loadConfig() {
+	log("loadConfig(): delegating to tools.readConfig()");
+	try {
+		const cfg = await readConfig();   
+		this.config = cfg || {};
+		this.parseBackendConfig();        
+		log("Loaded config via tools.readConfig()");
+	} catch (err: any) {
+		log("Failed to load config via tools.readConfig(): " + (err?.message || String(err)));
+		this.config = {};
+		// Still call parseBackendConfig so defaults apply if you set them there
+		this.parseBackendConfig();
+	}
+	}
 
-			} catch (error) {
-			  log('Failed to load config.json:' + error);
-			}
-		  } else {
-			log('config.json not found in workspace.');
-		  }
-		} else {
-		  log('No workspace folder found.');
-		}
-	  }
 
 	  private parseBackendConfig() {
 		if (this.config && this.config.backend) {

@@ -1,6 +1,6 @@
 // jobsPanel.ts
 import * as vscode from "vscode";
-import { log } from "./tools";
+import { log, readConfig } from "./tools";
 
 type JobRow = {
   job_uid: string;
@@ -13,16 +13,6 @@ type JobRow = {
   error_msg?: string;
 };
 
-async function readConfig(): Promise<any> {
-  // Replace with your real reader if you already have one
-  // Must provide: apikey
-  // Optional: jobs_url (default below)
-  const ws = vscode.workspace.workspaceFolders?.[0];
-  if (!ws) throw new Error("Open a workspace to use this command.");
-  const file = vscode.Uri.joinPath(ws.uri, "config.json");
-  const buf = await vscode.workspace.fs.readFile(file);
-  return JSON.parse(Buffer.from(buf).toString("utf8"));
-}
 
 
 async function getUserIdFromApiKey(apikey: string): Promise<string> {
@@ -140,7 +130,7 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
     log("Please specify apikey in your configuration file.");
     panel.webview.postMessage({
       type: "error",
-      error: "Missing API key. Please specify 'apikey' in your configuration."
+      error: "Missing API key. Please specify 'apikey' in config.json in workplace folder"
     });
     return;
   }

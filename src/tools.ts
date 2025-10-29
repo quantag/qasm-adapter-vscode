@@ -264,88 +264,22 @@ export async function getImage(sessionId: string) {
 export async function readConfig(): Promise<any> {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
-    throw new Error('No workspace folder open');
+      log("No workspace folder open.");
+      return {};
   }
 
   const configPath = path.join(workspaceFolders[0].uri.fsPath, 'config.json');
   log("configPath: " + configPath);
   if (!fs.existsSync(configPath)) {
-    throw new Error(`No config.json file found in workplace folder ${configPath}`);
+      log(`No config.json found at ${configPath}`);
+      return {};
   }
 
   const raw = fs.readFileSync(configPath, 'utf8');
   return JSON.parse(raw);
 }
 
-// submitJobGeneral.ts
 
-// Types are optional but help avoid mistakes
-type SubmitExecution = {
-  mode?: "sampler" | "estimator";
-  shots?: number;
-};
-
-/*
-type SubmitOptionsIBM = {
-  token: string;
-  instance: string;
-  device: string; // e.g. "ibm_brisbane"
-};
-
-type SubmitPayload = {
-  apikey: string;
-  src: string;           // base64
-  src_type: string;      // "qasm" by default
-  execution: SubmitExecution;
-  backend: "ibm" | "cudaq";
-  options: Record<string, unknown>; // provider-specific
-};
-
-async function pollJobUntilDone(jobUid: string, apikey: string) {
-  const baseUrl = "https://quantum.quantag-it.com/api5/qvm/job";
-  let delay = 1000;
-  const maxDelay = 8000;
-  const maxTimeMs = 3 * 60 * 1000; // 3 min
-  const t0 = Date.now();
-
-  while (true) {
-    const resp = await fetch(`${baseUrl}/${encodeURIComponent(jobUid)}`, {
-      method: "GET",
-      headers: {
-        "X-API-Key": apikey,
-        "Accept": "application/json"
-      }
-    });
-
-    const text = await resp.text();
-    let json: any = null;
-    try { json = text ? JSON.parse(text) : null; } catch {}
-
-    if (!resp.ok) {
-      log(`Status check failed: ${resp.status} ${resp.statusText} ${text}`);
-      return { ok: false, error: text || resp.statusText };
-    }
-
-    const st = String(json?.status || "");
-    if (st === "DONE") {
-      log("Job finished. Results received.");
-      return { ok: true, data: json };
-    }
-    if (st === "ERROR") {
-      log("Job ended with ERROR.");
-      return { ok: false, error: JSON.stringify(json) };
-    }
-
-    if (Date.now() - t0 > maxTimeMs) {
-      log("Timeout waiting for job.");
-      return { ok: false, error: "timeout" };
-    }
-
-    await new Promise(r => setTimeout(r, delay));
-    delay = Math.min(maxDelay, Math.round(delay * 1.6));
-  }
-}
-*/
 export function openJobsDashboard() {
   vscode.env.openExternal(vscode.Uri.parse("https://cloud.quantag-it.com/jobs"));
 }
