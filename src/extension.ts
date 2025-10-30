@@ -535,57 +535,6 @@ async function renderQasmCommandPyZX() {
 	}
 }
 
-/*
-async function renderQasmCommandPyZX_() {
-	// Step 1: Read QASM from active file 
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) {
-		vscode.window.showErrorMessage("No active editor");
-		return;
-	}
-
-	const qasm = editor.document.getText();
-    if (!qasm) return;
-	const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
-  
-
-  try {
-		const response = await fetch(Config["pyzx.render"], {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ qasm: qasmB64 }),
-		});
-
-		if (!response.ok) {
-			const text = await response.text();
-			throw new Error("Render failed: " + response.status + ": " + text);
-		}
-
-		const result = await response.json();
-		const imageB64 = result.image;
-
-		const panel = vscode.window.createWebviewPanel(
-			"qasmDiagram",
-			"QASM Diagram",
-			vscode.ViewColumn.Beside,
-			{ enableScripts: true }
-		);
-
-		panel.webview.html = `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<style>body { margin: 0; background: #1e1e1e; display: flex; justify-content: center; align-items: center; height: 100vh; }</style>
-		</head>
-		<body>
-			<img src="data:image/png;base64,${imageB64}" style="max-width: 100%; max-height: 100%;" />
-		</body>
-		</html>
-		`;
-  } catch (err: any) {
-    vscode.window.showErrorMessage("Rendering failed: " + err.message);
-  }
-}*/
 
 function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscode.WebviewPanel): string {
   const webview = panel.webview;
@@ -836,10 +785,10 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 	private server?: Net.Server;
 	private config: any;
 
-	private debugServerName: string  = "cryspprod3.quantag-it.com";
+	private debugServerName: string  = "node3.quantag-it.com";
 	private debugServerPort: number = 5555;
 
-	private runServerName: string  = "cryspprod3.quantag-it.com";
+	private runServerName: string  = "node3.quantag-it.com";
 	private runServerPort: number = 5555;
 
 	constructor() {
@@ -919,36 +868,13 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			log("workplaceFolder: " + workplaceFolder);
 
 			setSessionID(session.id);
-			log("SessionId: "+ session.id);
-			
-			log("UserID: "+ getUserID());
-			/*if(getUserID() !== undefined) {
-
-				const payload = {
-					sessionId: session.id,
-					userId: getUserID()
-				};
-				try {
-					log("send prepareData to " + Config["prepare.data"]);
-					const response = await fetch(Config["prepare.data"], {
-						method: 'POST',
-						body: JSON.stringify(payload),
-						headers: {'Content-Type': 'application/json; charset=UTF-8'}
-					});
-					
-					if (!response.ok) {
-					log("reponse of prepare data is not ok: "+ response.status +", "+ response.statusText);
-					}
-					
-				} catch (error) {
-					log("Error prepare data:" + error);
-				}
-			}*/
-			
+			log("SessionId: "+ session.id) + ", UserID: "+ getUserID();
+	
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
 			await sleep(1500);
 		}
 
+		log("Starting quantum debug session with "+this.debugServerName+":"+this.debugServerPort);
 		return new vscode.DebugAdapterServer(this.debugServerPort, this.debugServerName);
 	}
 

@@ -150,13 +150,6 @@ export async function submitFiles(folderPath: string, sessionId: string, rootFol
     const responseData = await response.json();
     log(JSON.stringify(responseData, null, 2)); // Log the JSON data with indentation for better readability
 
-   /* if (vscode.env.uiKind === vscode.UIKind.Web && baseUrl && responseData.sessionFolder) {
-      const normalized = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-      const url = `${normalized}/?folder=${encodeURIComponent(responseData.sessionFolder)}`;
-      log("Opening browser at: " + url);
-      vscode.env.openExternal(vscode.Uri.parse(url));
-    }*/
-
   } catch (error) {
       log("Error submitting files:" + error);
   }

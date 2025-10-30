@@ -1,10 +1,10 @@
 {
   "apikey": "take from https://cloud.quantag-it.com/profile",
   "debug": {
-    "server": "cryspprod3.quantag-it.com:5555"    
+    "server": "node3.quantag-it.com:5555"    
   },
   "run": {
-    "server": "cryspprod3.quantag-it.com:5555"  
+    "server": "node3.quantag-it.com:5555"  
  },
   "submit": {
     "backend": "ibm",
