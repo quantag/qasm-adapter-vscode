@@ -10,10 +10,9 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log, parseJwt, openJobsDashboard, readConfig} from './tools';
+import {submitFiles, log, parseJwt, readConfig} from './tools';
 import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
 
-import * as fs from 'fs';
 import * as path from 'path';
 
 import { 
@@ -836,49 +835,68 @@ async function sleep(ms) {
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
 	private config: any;
-	private serverName: string  = "cryspprod3.quantag-it.com";
-	private serverPort: number = 5555;
+
+	private debugServerName: string  = "cryspprod3.quantag-it.com";
+	private debugServerPort: number = 5555;
+
+	private runServerName: string  = "cryspprod3.quantag-it.com";
+	private runServerPort: number = 5555;
 
 	constructor() {
 		this.loadConfig(); // Load config when the factory is created
 	  }
 
 	private async loadConfig() {
-	log("loadConfig(): delegating to tools.readConfig()");
-	try {
-		const cfg = await readConfig();   
-		this.config = cfg || {};
-		this.parseBackendConfig();        
-		log("Loaded config via tools.readConfig()");
-	} catch (err: any) {
-		log("Failed to load config via tools.readConfig(): " + (err?.message || String(err)));
-		this.config = {};
-		// Still call parseBackendConfig so defaults apply if you set them there
-		this.parseBackendConfig();
-	}
-	}
-
-
-	  private parseBackendConfig() {
-		if (this.config && this.config.backend) {
-		  const [server, portStr] = this.config.backend.split(':');
-	
-		  if (server && portStr) {
-			this.serverName = server;
-			var _port = parseInt(portStr, 10);
-			
-			if (isNaN(this.serverPort)) {
-			  log('Invalid port value in backend configuration. Using default');
-			  this.serverPort = 5555; // Reset if port is invalid
-			} else {
-				this.serverPort = _port;
-			    log(`Parsed serverName: ${this.serverName}, port: ${this.serverPort}`);
-			}
-		  }
-		} else {
-		  log('No backend configuration found in config.json.');
+		log("loadConfig(): delegating to tools.readConfig()");
+		try {
+			const cfg = await readConfig();   
+			this.config = cfg || {};
+			this.parseBackendConfig();        
+			log("Loaded config via tools.readConfig()");
+		} catch (err: any) {
+			log("Failed to load config via tools.readConfig(): " + (err?.message || String(err)));
+			this.config = {};
 		}
-	  }
+	}
+
+	private parseBackendConfig() {
+		const debugServerEntry = this.config?.debug?.server;
+
+		if (debugServerEntry && typeof debugServerEntry === "string") {
+			const [server, portStr] = debugServerEntry.split(':');
+
+			if (server && portStr) {
+				this.debugServerName = server;
+				var _port = parseInt(portStr, 10);
+				
+				if (isNaN(this.debugServerPort)) {
+					log('Invalid port value in backend configuration. Using default');
+					this.debugServerPort = 5555; // Reset if port is invalid
+				} else {
+					this.debugServerPort = _port;
+					log(`Parsed debugServerName: ${this.debugServerName}, port: ${this.debugServerPort}`);
+				}
+			}
+		} 
+
+		const runServerEntry = this.config?.run?.server;
+		if (runServerEntry && typeof runServerEntry === "string") {
+			const [server2, portStr2] = runServerEntry.split(':');
+
+			if (server2 && portStr2) {
+				this.runServerName = server2;
+				var _port2 = parseInt(portStr2, 10);
+				
+				if (isNaN(this.runServerPort)) {
+					log('Invalid run port value in backend configuration. Using default');
+					this.runServerPort = 5555; // Reset if port is invalid
+				} else {
+					this.runServerPort = _port2;
+					log(`Parsed runServerName: ${this.runServerName}, port: ${this.runServerPort}`);
+				}
+			}
+		} 
+	}
 
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
@@ -931,7 +949,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			await sleep(1500);
 		}
 
-		return new vscode.DebugAdapterServer(this.serverPort, this.serverName);
+		return new vscode.DebugAdapterServer(this.debugServerPort, this.debugServerName);
 	}
 
 	dispose() {

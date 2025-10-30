@@ -1,0 +1,19 @@
+{
+  "apikey": "take from https://cloud.quantag-it.com/profile",
+  "debug": {
+    "server": "cryspprod3.quantag-it.com:5555"    
+  },
+  "run": {
+    "server": "cryspprod3.quantag-it.com:5555"  
+ },
+  "submit": {
+    "backend": "ibm",
+    "mode": "sampler",
+    "shots": 1024,
+    "options": {
+      "ibm_token": "take from IBMQ",
+      "instance": "",
+      "device": ""
+    }
+ }
+}
