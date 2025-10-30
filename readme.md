@@ -33,6 +33,8 @@ More information about quantum debugger adapter can be found
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
 
+Extension versions in .vsix can be downloaded from [here](https://quantag-it.com/pub/qdb/versions/)
+
 Detailed documentation of extension can be downloaded as PDF from [here](https://quantag-it.com/pub/qdb/QSextensionDocs.pdf)
 
 ## Using OpenQASM debugger
