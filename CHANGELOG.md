@@ -1,3 +1,7 @@
+## 1.0.16
+* removed dedicated comamnd to submit job to Zurich Instruments, instead use special config and general Submit
+
+
 ## 1.0.11
 * removed dedicated comamnd to submit job to IBMQ, instead use special config and general Submit
 

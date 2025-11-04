@@ -280,7 +280,7 @@ export function openJobsDashboard() {
 export async function submitJobGeneral(srcData: string) {
   try {
     const cfg = await readConfig();
-
+    
     const url =
       (globalThis as any).Config?.["qvm.submit"] ??
       cfg.submit_url ??
@@ -288,13 +288,55 @@ export async function submitJobGeneral(srcData: string) {
 
     // Base64 encode QASM
     const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
+    const backend = cfg?.submit?.backend?.toLowerCase?.();
+    // === Handle Zurich Instruments setup file if present ===
+    const setupFile = cfg?.submit?.options?.setup;
+    if (setupFile) {
+      try {
+        const workspaceRoot =
+          vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? process.cwd();
+
+        const setupPath = path.isAbsolute(setupFile)
+          ? setupFile
+          : path.join(workspaceRoot, setupFile);
+
+        const setupContent = fs.readFileSync(setupPath, "utf8");
+        const setupB64 = Buffer.from(setupContent, "utf8").toString("base64");
+
+        // Replace 'setup' with 'setup_b64' inside config
+        cfg.submit.options.setup_b64 = setupB64;
+        delete cfg.submit.options.setup;
+        log(`Loaded YAML setup from: ${setupPath}`);
+      } catch (err: any) {
+        const msg = `Error: could not read setup file '${setupFile}': ${err.message}`;
+        log(msg);
+        if (backend === "zi") {
+          log("Aborting submission: ZI backend requires a valid setup.yaml file.");
+          return;
+        }
+      }
+    }
 
     // Just send config as-is
     const payload = {
       src: srcBase64,
       config: cfg,
     };
-
+    // === Log outgoing request (without huge Base64) ===
+ /*   const previewCfg = JSON.parse(JSON.stringify(cfg));
+    if (previewCfg.submit?.options?.setup_b64) {
+      previewCfg.submit.options.setup_b64 =
+        `[base64 string, ${previewCfg.submit.options.setup_b64.length} chars]`;
+    }
+    const shortSrc = srcBase64.length > 80
+      ? srcBase64.slice(0, 80) + "... (" + srcBase64.length + " chars)"
+      : srcBase64;
+    log("=== Outgoing job payload ===");
+    log(`URL: ${url}`);
+    log(`Backend: ${backend}`);
+    log(`QASM (base64 preview): ${shortSrc}`);
+    log("Config snapshot:\n" + JSON.stringify(previewCfg, null, 2));
+    log("============================");*/
     log("Submitting job to: " + url);
 
     const response = await fetch(url, {

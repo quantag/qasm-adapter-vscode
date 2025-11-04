@@ -1,0 +1,21 @@
+device_setup:
+  name: simple_setup
+  instruments:
+    - uid: HDAWG
+      device_type: HDAWG8
+      address: DEV1001
+      interface: ethernet
+  logical_signals:
+    - uid: q0/drive
+      signal_type: drive
+      instrument: HDAWG
+      channel: 1
+    - uid: q1/drive
+      signal_type: drive
+      instrument: HDAWG
+      channel: 2
+  qubits:
+    - uid: q0
+      drive: q0/drive
+    - uid: q1
+      drive: q1/drive
