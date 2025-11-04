@@ -302,7 +302,6 @@ context.subscriptions.push(
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 				qasm_b64: qasmB64,
-				backend: "ibm_brisbane",
 				opt: 3
 				})
 			});

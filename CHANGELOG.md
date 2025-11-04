@@ -1,3 +1,7 @@
+## 1.0.18
+* removed dparamter 'backend' from 3d transpile. now choosen automatically
+
+
 ## 1.0.16
 * removed dedicated comamnd to submit job to Zurich Instruments, instead use special config and general Submit
 
