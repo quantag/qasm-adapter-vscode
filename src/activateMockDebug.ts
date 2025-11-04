@@ -98,13 +98,6 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			}
 			getHtml(currentSessionID);
 		}),	
-		vscode.commands.registerCommand('extension.mock-debug.openCircuitWeb', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			openCircuitWeb(currentSessionID);
-		}),
 		vscode.commands.registerCommand('extension.mock-debug.QASMtoQIR', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
 			//let targetResource = resource;
 			//if (!targetResource && vscode.window.activeTextEditor) {
