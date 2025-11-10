@@ -74,14 +74,31 @@ Open .qasm file and execute command *Optimize QASM with PyZX* from Command Palet
 ## Configuration (optional)
 
 If workplace contains file __config.json__ it is trated as configuration.
-
-Currently it supports only backend address
+It has parameters 'debug', 'run' and 'submit' to configure actions for Debug Circuit, Run Circuit and Submit Curcuit accordingly.
+Parameter 'apikey' is Quantag account key required to access job list and other resources like QVM.
 
 Example of configuraiton file:
 ```
 {
-  "backend": "cryspprod3.quantag-it.com:5555"
+  "apikey": "your API key from https://cloud.quantag-it.com/profile",
+  "debug": {
+    "server": "node3.quantag-it.com:5555"    
+  },
+  "run": {
+    "server": "node3.quantag-it.com:5555"  
+  },
+  "submit": {
+    "backend": "ibm",
+    "mode": "sampler",
+    "shots": 1024,
+    "options": {
+      "ibm_token": "your IBM-Q token",
+      "instance": "your IBM instance",
+      "device": "your IBM device"
+   }
+  }
 }
+
 ```
 
 
