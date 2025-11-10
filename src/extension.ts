@@ -10,9 +10,10 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log, parseJwt, readConfig} from './tools';
-import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
+import {submitFiles, log, parseJwt} from './tools';
+import { getUserID, RemoteFileSystemProvider } from './remoteFileSystemProvider';
 
+import * as fs from 'fs';
 import * as path from 'path';
 
 import { 
@@ -26,8 +27,6 @@ import {
 import { GuppyCodeLensProvider } from "./GuppyCodeLensProvider";
 import { QasmHoverProvider } from './QasmHoverProvider';
 import { CudaQCodeLensProvider } from './cudaqCodeLensProvider';
-import { Config, updateConfig } from "./config";
-import { openJobsPanel } from './jobsPanel';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -39,18 +38,12 @@ const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'server';
 const config = vscode.workspace.getConfiguration('remoteFiles');
 const apiBaseUrl = config.get<string>('baseUrl', 'https://cryspprod3.quantag-it.com/api5');
 let statusBarItem: vscode.StatusBarItem;
-const AUTH_CHECK_URL = Config["auth.check"];
-const AUTH_START_URL = Config["auth.start"];
+const AUTH_CHECK_URL = "https://cryspprod3.quantag-it.com:444/api10/check_token_ready";
+const AUTH_START_URL = "https://cryspprod3.quantag-it.com:444/api10/google-auth-start";
 const AUTH_POLL_INTERVAL = 2000;
 
 
 export function activate(context: vscode.ExtensionContext) {
-
-	// Detect if we are in Web mode
-	const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
-
-	// Set a custom context key (true if running in Desktop)
-	vscode.commands.executeCommand('setContext', 'quantag.isDesktop', !isWeb);
 
 	// debug adapters can be run in different ways by using a vscode.DebugAdapterDescriptorFactory:
 	switch (runMode) {
@@ -110,11 +103,13 @@ context.subscriptions.push(
           const srcB64 = Buffer.from(sourceCode, "utf-8").toString("base64");
 
           // Settings from package.json (workspace config)
+          const apiBase = vscode.workspace.getConfiguration("quantagStudio").get<string>("apiBase") 
+                          || "https://cryspprod3.quantag-it.com:444/api19";
           const target = vscode.workspace.getConfiguration("quantagStudio").get<string>("cudaqTarget") 
                           || "qpp-cpu";
 
           // Call microservice
-          const response = await fetch(Config["cudaq.run"], {
+          const response = await fetch(apiBase + "/cudaq/run", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -191,73 +186,67 @@ context.subscriptions.push(
 		new QasmHoverProvider()
 	);
 
-  	context.subscriptions.push(provider);
+  context.subscriptions.push(provider);
 
 	context.subscriptions.push(vscode.commands.registerCommand(
-		"quantag.guppy.compileOne",
-		async (uri: vscode.Uri, fnName: string) => {
-			const cfg = getConfig();
-			const doc = await vscode.workspace.openTextDocument(uri);
-			const source = doc.getText();
-
-		try {
-			const results = await compileGuppyFunctions(
-				source,
-				[fnName],    // compile only this one
-				cfg.formats,
-				cfg.apiBase,
-				cfg.timeoutMs,
-				cfg.insecureTLS
-			);
-			const ws = vscode.workspace.workspaceFolders?.[0];
-			if (!ws) {
-				vscode.window.showErrorMessage("Open a workspace to save outputs.");
-				return;
-			}
-			const outRoot = vscode.Uri.joinPath(ws.uri, cfg.outDir);
-			const stem = path.parse(uri.fsPath).name;
-			await saveArtifacts(results, outRoot, stem);
-			vscode.window.showInformationMessage(`Compiled ${fnName} to ${cfg.outDir}/${stem}/`);
-		} catch (e: any) {
-			vscode.window.showErrorMessage(`Compile failed for ${fnName}: ${e.message || e}`);
-		}
-	}
-	));
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("quantag.studio.viewJobs", async () => {
-			await openJobsPanel(context);
-		})
-	);
-	
-
-	// compileAllInFile command
-	context.subscriptions.push(vscode.commands.registerCommand("quantag.guppy.compileAllInFile",
-		async (uri: vscode.Uri) => {
+	"quantag.guppy.compileOne",
+	async (uri: vscode.Uri, fnName: string) => {
 		const cfg = getConfig();
 		const doc = await vscode.workspace.openTextDocument(uri);
 		const source = doc.getText();
 
-		// detect again to ensure fresh list
-		let fns: DetectFnInfo[] = [];
 		try {
-			fns = await detectFromBackend(source, cfg.apiBase, cfg.timeoutMs, cfg.insecureTLS);
-		} catch (e: any) {
-			vscode.window.showErrorMessage(`Detect failed: ${e.message || e}`);
-			return;
-		}
-		const names = fns.map(f => f.name);
-		if (!names.length) { vscode.window.showInformationMessage("No @guppy functions found."); return; }
-
-		try {
-		const resp = await compileGuppyFunctions(
+		const results = await compileGuppyFunctions(
 			source,
-			names,
+			[fnName],    // compile only this one
 			cfg.formats,
 			cfg.apiBase,
 			cfg.timeoutMs,
 			cfg.insecureTLS
 		);
+		const ws = vscode.workspace.workspaceFolders?.[0];
+		if (!ws) {
+			vscode.window.showErrorMessage("Open a workspace to save outputs.");
+			return;
+		}
+		const outRoot = vscode.Uri.joinPath(ws.uri, cfg.outDir);
+		const stem = path.parse(uri.fsPath).name;
+		await saveArtifacts(results, outRoot, stem);
+		vscode.window.showInformationMessage(`Compiled ${fnName} to ${cfg.outDir}/${stem}/`);
+		} catch (e: any) {
+		vscode.window.showErrorMessage(`Compile failed for ${fnName}: ${e.message || e}`);
+		}
+	}
+	));
+
+
+  // compileAllInFile command
+  context.subscriptions.push(vscode.commands.registerCommand("quantag.guppy.compileAllInFile",
+    async (uri: vscode.Uri) => {
+      const cfg = getConfig();
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const source = doc.getText();
+
+      // detect again to ensure fresh list
+      let fns: DetectFnInfo[] = [];
+      try {
+        fns = await detectFromBackend(source, cfg.apiBase, cfg.timeoutMs, cfg.insecureTLS);
+      } catch (e: any) {
+        vscode.window.showErrorMessage(`Detect failed: ${e.message || e}`);
+        return;
+      }
+      const names = fns.map(f => f.name);
+      if (!names.length) { vscode.window.showInformationMessage("No @guppy functions found."); return; }
+
+	try {
+	const resp = await compileGuppyFunctions(
+		source,
+		names,
+		cfg.formats,
+		cfg.apiBase,
+		cfg.timeoutMs,
+		cfg.insecureTLS
+	);
 
 	const results = (resp as any).results ?? resp as Record<string, Record<string, string>>;
 
@@ -296,12 +285,15 @@ context.subscriptions.push(
 		// Step 2: Transpile using cloud API
 		let circuitJson;
 		try {
+			const apiBase = "https://cryspprod3.quantag-it.com:444/api15";
 			const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
-			const response = await fetch(Config["transpile"], {
+
+			const response = await fetch(apiBase + "/transpile", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 				qasm_b64: qasmB64,
+				backend: "ibm_brisbane",
 				opt: 3
 				})
 			});
@@ -363,6 +355,8 @@ context.subscriptions.push(
 		})
 	);
 
+
+
 	// === Register Quantag Studio Google Auth Command ===
 	context.subscriptions.push(
 		vscode.commands.registerCommand("quantagStudio.authWithGoogle", async () => {
@@ -375,7 +369,7 @@ context.subscriptions.push(
 	statusBarItem.tooltip = "Quantag Studio Google Auth";
 	context.subscriptions.push(statusBarItem);
 
-	statusBarItem.text = "Quantag Studio";
+	statusBarItem.text = "Quantag Studio: Init...";
 	statusBarItem.show();
 
 	updateLoginStatusBar(context); 
@@ -399,7 +393,7 @@ async function optimizeQasmCommandPyZX() {
     const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
 
   try {
-		const response = await fetch(Config["pyzx.optimize"], {
+		const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/optimize", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ qasm: qasmB64 }),
@@ -424,41 +418,6 @@ async function optimizeQasmCommandPyZX() {
   }
 }
 
-function detectQasmType(qasmSource: string): number {
-	/**
-	 * Detects whether the given source is OpenQASM 2 or 3.
-	 * Returns:
-	 *   0 → QASM 2
-	 *   1 → QASM 3
-	 *  -1 → Unknown / not QASM
-	 */
-	if (!qasmSource) return -1;
-
-	const text = qasmSource.trim();
-
-	// Normalize line endings and remove comments
-	const clean = text
-		.replace(/\r/g, "")
-		.replace(/\/\/.*$/gm, "")
-		.replace(/\/\*[\s\S]*?\*\//g, "")
-		.trim();
-
-	// Direct header match
-	if (/^OPENQASM\s+3(\.0)?\s*;/i.test(clean)) return 1;
-	if (/^OPENQASM\s+2(\.0)?\s*;/i.test(clean)) return 0;
-
-	// Heuristics
-	if (/\binclude\s+"stdgates\.inc"/i.test(clean)) return 1;
-	if (/\bqubit\s*\[/i.test(clean)) return 1;     // QASM 3 allows qubit arrays
-	if (/\bqubit\s+[a-zA-Z_]/i.test(clean)) return 1;
-	if (/\bif\s*\(.*==\s*(true|false)\)/i.test(clean)) return 1; // QASM 3 boolean if
-	if (/\bcreg\b|\bqreg\b/i.test(clean)) return 0;               // QASM 2 register syntax
-	if (/\bmeasure\s+[a-zA-Z_]+\s*->\s*[a-zA-Z_]+/i.test(clean)) return 0;
-
-	return -1; // could not decide
-}
-
-
 async function renderQasmCommandPyZX() {
 	// Step 1: Read QASM from active file 
 	const editor = vscode.window.activeTextEditor;
@@ -468,36 +427,24 @@ async function renderQasmCommandPyZX() {
 	}
 
 	const qasm = editor.document.getText();
-	if (!qasm) {
-		vscode.window.showErrorMessage("File is empty");
-		return;
-	}
+    if (!qasm) return;
+	const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+  
 
-	// Encode source to base64
-	const srcB64 = Buffer.from(qasm, "utf-8").toString("base64");
-
-	// Detect type from file extension
-	const srcType = detectQasmType(qasm);
-	const url = Config["pyzx.render2"];
-    log(`srcType = ${srcType} url = ${url}`);
-	try {
-		const response = await fetch(url, {
+  try {
+const response = await fetch("https://cryspprod3.quantag-it.com:444/api16/render", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ src: srcB64, type: srcType }),
+			body: JSON.stringify({ qasm: qasmB64 }),
 		});
 
 		if (!response.ok) {
 			const text = await response.text();
-			throw new Error(`Render failed (${response.status}): ${text}`);
+			throw new Error("Render failed: " + response.status + ": " + text);
 		}
 
 		const result = await response.json();
 		const imageB64 = result.image;
-
-		if (!imageB64) {
-			throw new Error("No image returned from backend");
-		}
 
 		const panel = vscode.window.createWebviewPanel(
 			"qasmDiagram",
@@ -510,30 +457,17 @@ async function renderQasmCommandPyZX() {
 		<!DOCTYPE html>
 		<html>
 		<head>
-			<style>
-				body {
-					margin: 0;
-					background: #1e1e1e;
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					height: 100vh;
-				}
-				img {
-					max-width: 100%;
-					max-height: 100%;
-				}
-			</style>
+			<style>body { margin: 0; background: #1e1e1e; display: flex; justify-content: center; align-items: center; height: 100vh; }</style>
 		</head>
 		<body>
-			<img src="data:image/png;base64,${imageB64}" />
+			<img src="data:image/png;base64,${imageB64}" style="max-width: 100%; max-height: 100%;" />
 		</body>
-		</html>`;
-	} catch (err: any) {
-		vscode.window.showErrorMessage("Rendering failed: " + err.message);
-	}
+		</html>
+		`;
+  } catch (err: any) {
+    vscode.window.showErrorMessage("Rendering failed: " + err.message);
+  }
 }
-
 
 function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscode.WebviewPanel): string {
   const webview = panel.webview;
@@ -646,40 +580,6 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
         await context.secrets.store("remoteAuthToken", token);
         vscode.window.showInformationMessage("Google login successful.");
 		console.info("Google login successful!");
-
-		        // === Decode token and call backend ===
-        const payload = parseJwt(token);
-        const google_id = payload?.sub;   // Google unique user ID
-        const email = payload?.email;
-
-        if (google_id && email) {
-            try {
-                const resp = await fetch(Config["getuser.by_googleid"], {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ google_id, email })
-                });
-
-                if (resp.ok) {
-                    const user = await resp.json();
-					const uid = user.uid?.toString();
-					if (uid) {
-						await context.secrets.store("internalUserId", uid);
-						console.info("Bound internal user:", uid);
-						vscode.window.showInformationMessage(`Logged in as internal user ${uid}`);
-						setUserID(uid);
-            		}
-                    console.info("Bound internal user:", user);
-                    vscode.window.showInformationMessage(`Logged in as ${user.uid}`);
-                    // optionally store UID for later
-                    await context.secrets.store("internalUserId", user.uid.toString());
-                } else {
-                    console.error("Failed to bind GoogleID:", await resp.text());
-                }
-            } catch (err) {
-                console.error("Error calling getuser_by_googleid:", err);
-            }
-        }
     } else {
         vscode.window.showErrorMessage("Login timeout. Please try again.");
     }
@@ -687,65 +587,26 @@ async function authWithGoogle(context: vscode.ExtensionContext) {
     updateLoginStatusBar(context);
 }
 
-async function getConfigForUser(userId: string): Promise<void> {
-    try {
-        const resp = await fetch(Config["get.config"], {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: userId })
-        });
-
-        if (!resp.ok) {
-            const txt = await resp.text();
-            throw new Error(`get_config failed: ${resp.status} ${txt}`);
-        }
-
-        const newCfg = await resp.json();
-        updateConfig(newCfg);
-
-        console.info("Config updated for user", userId, newCfg);
-    } catch (err: any) {
-        console.error("Error in getConfigForUser:", err.message || err);
-    }
-}
 function updateLoginStatusBar(context: vscode.ExtensionContext) {
-    console.log("Calling updateLoginStatusBar");
-	const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
-	if(isWeb) {
-		return;
-	}
+	console.log("Calling updateLoginStatusBar");
+	context.secrets.get("remoteAuthToken").then(token => {
+		console.log("Got token from secrets:", token);
+		let email = null;
 
-    Promise.all([
-        context.secrets.get("remoteAuthToken"),
-        context.secrets.get("internalUserId")
-    ]).then(([token, userId]) => {
-        console.log("Got token from secrets:", token);
-        console.log("Got internalUserId from secrets:", userId);
+		if (token) {
+			const payload = parseJwt(token);
+			email = payload?.email;
+		}
 
-        let email: string | null = null;
+		statusBarItem.text = email
+			? `Quantag: ${email}`
+			: token
+			? "Quantag: Logged In"
+			: "Quantag: Not Logged In";
 
-        if (token) {
-            const payload = parseJwt(token);
-            email = payload?.email || null;
-        }
-
-        if (email && userId) {
-            statusBarItem.text = `Quantag: ${email} (uid=${userId})`;
-			getConfigForUser(userId);
-			setUserID(userId);
-
-        } else if (email) {
-            statusBarItem.text = `Quantag: ${email}`;
-        } else if (token) {
-            statusBarItem.text = "Quantag: Logged In";
-        } else {
-            statusBarItem.text = "Quantag: Not Logged In";
-        }
-
-        statusBarItem.show();
-    });
+		statusBarItem.show();
+	});
 }
-
 
 
 class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFactory {
@@ -783,68 +644,56 @@ async function sleep(ms) {
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 	private server?: Net.Server;
 	private config: any;
-
-	private debugServerName: string  = "node3.quantag-it.com";
-	private debugServerPort: number = 5555;
-
-	private runServerName: string  = "node3.quantag-it.com";
-	private runServerPort: number = 5555;
+	private serverName: string  = "cryspprod3.quantag-it.com";
+	private serverPort: number = 5555;
 
 	constructor() {
 		this.loadConfig(); // Load config when the factory is created
 	  }
 
-	private async loadConfig() {
-		log("loadConfig(): delegating to tools.readConfig()");
-		try {
-			const cfg = await readConfig();   
-			this.config = cfg || {};
-			this.parseBackendConfig();        
-			log("Loaded config via tools.readConfig()");
-		} catch (err: any) {
-			log("Failed to load config via tools.readConfig(): " + (err?.message || String(err)));
-			this.config = {};
+	  private async loadConfig() {
+		const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+	
+		if (workspaceFolder) {
+		  const configPath = path.join(workspaceFolder, 'config.json');
+	
+		  if (fs.existsSync(configPath)) {
+			try {
+			  const configFileContent = await fs.promises.readFile(configPath, 'utf8');
+			  this.config = JSON.parse(configFileContent);
+			  this.parseBackendConfig();
+
+			} catch (error) {
+			  log('Failed to load config.json:' + error);
+			}
+		  } else {
+			log('config.json not found in workspace.');
+		  }
+		} else {
+		  log('No workspace folder found.');
 		}
-	}
+	  }
 
-	private parseBackendConfig() {
-		const debugServerEntry = this.config?.debug?.server;
-
-		if (debugServerEntry && typeof debugServerEntry === "string") {
-			const [server, portStr] = debugServerEntry.split(':');
-
-			if (server && portStr) {
-				this.debugServerName = server;
-				var _port = parseInt(portStr, 10);
-				
-				if (isNaN(this.debugServerPort)) {
-					log('Invalid port value in backend configuration. Using default');
-					this.debugServerPort = 5555; // Reset if port is invalid
-				} else {
-					this.debugServerPort = _port;
-					log(`Parsed debugServerName: ${this.debugServerName}, port: ${this.debugServerPort}`);
-				}
+	  private parseBackendConfig() {
+		if (this.config && this.config.backend) {
+		  const [server, portStr] = this.config.backend.split(':');
+	
+		  if (server && portStr) {
+			this.serverName = server;
+			var _port = parseInt(portStr, 10);
+			
+			if (isNaN(this.serverPort)) {
+			  log('Invalid port value in backend configuration. Using default');
+			  this.serverPort = 5555; // Reset if port is invalid
+			} else {
+				this.serverPort = _port;
+			    log(`Parsed serverName: ${this.serverName}, port: ${this.serverPort}`);
 			}
-		} 
-
-		const runServerEntry = this.config?.run?.server;
-		if (runServerEntry && typeof runServerEntry === "string") {
-			const [server2, portStr2] = runServerEntry.split(':');
-
-			if (server2 && portStr2) {
-				this.runServerName = server2;
-				var _port2 = parseInt(portStr2, 10);
-				
-				if (isNaN(this.runServerPort)) {
-					log('Invalid run port value in backend configuration. Using default');
-					this.runServerPort = 5555; // Reset if port is invalid
-				} else {
-					this.runServerPort = _port2;
-					log(`Parsed runServerName: ${this.runServerName}, port: ${this.runServerPort}`);
-				}
-			}
-		} 
-	}
+		  }
+		} else {
+		  log('No backend configuration found in config.json.');
+		}
+	  }
 
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		if (!this.server) {
@@ -856,25 +705,45 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 			}).listen(0);
 		}
 
-		this.loadConfig();
 		// Write to output.
 		log("Starting OpenQASM debugging session..");
-		const version = vscode.extensions.getExtension('QuantagITSolutionsGmbH.openqasm-debug')?.packageJSON.version
-		log("Extension version: v" + version);
-
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 			log("workplaceFolder: " + workplaceFolder);
 
 			setSessionID(session.id);
-			log("SessionId: "+ session.id) + ", UserID: "+ getUserID();
-	
+			log("SessionId: "+ session.id);
+			
+			log("UserID: "+ getUserID());
+			if(getUserID() !== undefined) {
+
+				const payload = {
+					sessionId: session.id,
+					userId: getUserID()
+				};
+				try {
+					log("send prepareData");
+					const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/prepareData", {
+						method: 'POST',
+						body: JSON.stringify(payload),
+						headers: {'Content-Type': 'application/json; charset=UTF-8'}
+					});
+					
+					if (!response.ok) {
+					log("reponse of prepare data is not ok: "+ response.status +", "+ response.statusText);
+					}
+					
+				} catch (error) {
+					log("Error prepare data:" + error);
+				}
+			}
+			
 			submitFiles(workplaceFolder, session.id, workplaceFolder);
+
 			await sleep(1500);
 		}
 
-		log("Starting quantum debug session with "+this.debugServerName+":"+this.debugServerPort);
-		return new vscode.DebugAdapterServer(this.debugServerPort, this.debugServerName);
+		return new vscode.DebugAdapterServer(this.serverPort, this.serverName);
 	}
 
 	dispose() {

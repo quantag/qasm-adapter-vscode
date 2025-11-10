@@ -53,18 +53,14 @@ export async function detectFromBackend(
   timeoutMs: number,
   insecureTLS: boolean
 ): Promise<DetectFnInfo[]> {
-  const url = `${apiBase}/detect`;
-  log(url);
-
-  const resp = await fetch(url, {
+  const resp = await fetch(`${apiBase}/detect`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       source_b64: Buffer.from(source, "utf-8").toString("base64"),
     }),
   });
-  if (!resp.ok) { throw new Error(`Detect failed: ${resp.statusText}`); }
-  
+  if (!resp.ok) throw new Error(`Detect failed: ${resp.statusText}`);
   const data = await resp.json();
   return data.functions as DetectFnInfo[];
 }

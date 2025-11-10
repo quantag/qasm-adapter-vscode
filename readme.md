@@ -7,15 +7,6 @@ This extension allows debugging of quantum program written in OpenQASM or one of
 It supports *step*, *continue*, *breakpoints*, *exceptions*, and
 *variable access*.
 
-## Bulding extension
-```
-git clone https://github.com/quantag/qasm-adapter-vscode.git
-
-npm install --save-dev esbuild
-```
-
-## Description 
-
 Program in OpenQASM executed step by step on remote QVM and its state shown in VS Code in 'Variables' window.
 Program in python which uses Qiskit or TKET frameworks loaded to QVM and converted to OpenQASM code.
 This OpenQASM code can be views in 'Disassembly' window.
@@ -32,8 +23,6 @@ More information about quantum debugger adapter can be found
 [here](https://quantum.quantag-it.com/).
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
-
-Extension versions in .vsix can be downloaded from [here](https://quantag-it.com/pub/qdb/versions/)
 
 Detailed documentation of extension can be downloaded as PDF from [here](https://quantag-it.com/pub/qdb/QSextensionDocs.pdf)
 
@@ -85,14 +74,31 @@ Open .qasm file and execute command *Optimize QASM with PyZX* from Command Palet
 ## Configuration (optional)
 
 If workplace contains file __config.json__ it is trated as configuration.
-
-Currently it supports only backend address
+It has parameters 'debug', 'run' and 'submit' to configure actions for Debug Circuit, Run Circuit and Submit Curcuit accordingly.
+Parameter 'apikey' is Quantag account key required to access job list and other resources like QVM.
 
 Example of configuraiton file:
 ```
 {
-  "backend": "cryspprod3.quantag-it.com:5555"
+  "apikey": "your API key from https://cloud.quantag-it.com/profile",
+  "debug": {
+    "server": "node3.quantag-it.com:5555"    
+  },
+  "run": {
+    "server": "node3.quantag-it.com:5555"  
+  },
+  "submit": {
+    "backend": "ibm",
+    "mode": "sampler",
+    "shots": 1024,
+    "options": {
+      "ibm_token": "your IBM-Q token",
+      "instance": "your IBM instance",
+      "device": "your IBM device"
+   }
+  }
 }
+
 ```
 
 
