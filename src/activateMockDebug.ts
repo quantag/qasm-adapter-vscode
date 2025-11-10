@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
-import { getHtml, getImage, openCircuitWeb, QASMtoQIR, runOnIBMQ, runZISimulator } from './tools';
+import { getHtml, getImage, openCircuitWeb, QASMtoQIR, runZISimulator, submitJobGeneral } from './tools';
 
 let currentSessionID: string;
 
@@ -23,6 +23,7 @@ export function setSessionID(sessionID: string) {
 export function activateMockDebug(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {
 
 	context.subscriptions.push(
+		// Run circuit
 		vscode.commands.registerCommand('extension.mock-debug.runEditorContents', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
@@ -39,6 +40,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				);
 			}
 		}),
+		// Debug circuit
 		vscode.commands.registerCommand('extension.mock-debug.debugEditorContents', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
@@ -54,7 +56,8 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),
-		vscode.commands.registerCommand('extension.mock-debug.buildTargetIBMQ', (resource: vscode.Uri) => {
+		// Debug circuit
+		vscode.commands.registerCommand('extension.mock-debug.submitEditorContents', (resource: vscode.Uri) => {
 			const editor = vscode.window.activeTextEditor;
 
 			if (editor) {
@@ -62,40 +65,10 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 	
 				// Get the document text
 				const documentText = document.getText();
-				runOnIBMQ(documentText);
+				submitJobGeneral(documentText);
 			}
 		}),
 		
-		vscode.commands.registerCommand('extension.mock-debug.buildTargetGoogleSycamore', (resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			if (targetResource) {
-				vscode.debug.startDebugging(undefined, {
-					type: 'mock',
-					name: 'Build for Google Sycamore',
-					request: 'launch',
-					program: targetResource.fsPath,
-					stopOnEntry: true
-				});
-			}
-		}),
-		vscode.commands.registerCommand('extension.mock-debug.buildTargetRigettiNovera', (resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			if (targetResource) {
-				vscode.debug.startDebugging(undefined, {
-					type: 'mock',
-					name: 'Build for Rigetti Novera',
-					request: 'launch',
-					program: targetResource.fsPath,
-					stopOnEntry: true
-				});
-			}
-		}),
 		vscode.commands.registerCommand('extension.mock-debug.buildTargetQuantinuumH1', (resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
@@ -111,23 +84,11 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 				});
 			}
 		}),
-		vscode.commands.registerCommand('extension.mock-debug.runOnZISimulator', (resource: vscode.Uri) => {
-			const editor = vscode.window.activeTextEditor;
-
-			if (editor) {
-				let document = editor.document;
-	
-				// Get the document text
-				const documentText = document.getText();
-				runZISimulator(documentText);
-			}
-		}),
 		vscode.commands.registerCommand('extension.mock-debug.getCircuitImage', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
 			let targetResource = resource;
 			if (!targetResource && vscode.window.activeTextEditor) {
 				targetResource = vscode.window.activeTextEditor.document.uri;
 			}
-			QASMtoQIR(currentSessionID);
 			getImage(currentSessionID);
 		}),
 		vscode.commands.registerCommand('extension.mock-debug.getCircuitHtml', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
@@ -137,13 +98,6 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			}
 			getHtml(currentSessionID);
 		}),	
-		vscode.commands.registerCommand('extension.mock-debug.openCircuitWeb', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
-			let targetResource = resource;
-			if (!targetResource && vscode.window.activeTextEditor) {
-				targetResource = vscode.window.activeTextEditor.document.uri;
-			}
-			openCircuitWeb(currentSessionID);
-		}),
 		vscode.commands.registerCommand('extension.mock-debug.QASMtoQIR', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
 			//let targetResource = resource;
 			//if (!targetResource && vscode.window.activeTextEditor) {

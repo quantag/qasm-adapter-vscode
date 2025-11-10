@@ -7,6 +7,15 @@ This extension allows debugging of quantum program written in OpenQASM or one of
 It supports *step*, *continue*, *breakpoints*, *exceptions*, and
 *variable access*.
 
+## Bulding extension
+```
+git clone https://github.com/quantag/qasm-adapter-vscode.git
+
+npm install --save-dev esbuild
+```
+
+## Description 
+
 Program in OpenQASM executed step by step on remote QVM and its state shown in VS Code in 'Variables' window.
 Program in python which uses Qiskit or TKET frameworks loaded to QVM and converted to OpenQASM code.
 This OpenQASM code can be views in 'Disassembly' window.
@@ -23,6 +32,8 @@ More information about quantum debugger adapter can be found
 [here](https://quantum.quantag-it.com/).
 
 Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
+
+Extension versions in .vsix can be downloaded from [here](https://quantag-it.com/pub/qdb/versions/)
 
 Detailed documentation of extension can be downloaded as PDF from [here](https://quantag-it.com/pub/qdb/QSextensionDocs.pdf)
 

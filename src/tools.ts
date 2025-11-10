@@ -1,6 +1,7 @@
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Config } from './config';
 
 const logger = vscode.window.createOutputChannel("OpenQASM");
 const fs = require('fs');
@@ -55,12 +56,14 @@ async function getDirectories(folderPath) {
   return result;
 }
 
-async function getAllFilesInFolder(folderPath, filesData) {
+async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFolder: string) {
   log("getAllFilesInFolder " + folderPath);
   const files = await fsPromises.readdir(folderPath);
 
   // Filter files with .qasm or .py extension
-  const qasmFiles = files.filter(file => (path.extname(file) === '.qasm' || path.extname(file)==='.py'));
+  const qasmFiles = files.filter(file =>
+    (path.extname(file) === '.qasm' || path.extname(file) === '.py')
+  );
 
   for (const file of qasmFiles) {
     const filePath = path.join(folderPath, file);
@@ -71,37 +74,69 @@ async function getAllFilesInFolder(folderPath, filesData) {
     // Encode file contents in base64
     const encodedContents = base64Encode(fileContents);
 
+    // Compute relative path from rootFolder
+    const relPath = path.relative(rootFolder, filePath).replace(/\\/g, "/");
+
     // Add file details to the array
     filesData.push({
-      path: filePath,
+      path: relPath,
       source: encodedContents,
     });
   }
 
-  var subFolders = await getDirectories(folderPath);
+  const subFolders = await getDirectories(folderPath);
   log("Found " + subFolders.length + " subfolders in " + folderPath);
 
-  for(var sub of subFolders) { 
-    await getAllFilesInFolder(sub, filesData);
+  for (const sub of subFolders) {
+    await getAllFilesInFolder(sub, filesData, rootFolder);
   }
-  
+
   return filesData;
 }
 
+type SubmitOpts = {
+  mode?: "desktop" | "web";
+  baseUrl?: string; // QUANTAG_BASE_URL, e.g. "https://cloud.quantag-it.com"
+};
 
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
     const filesData: { path: string; source: string }[] = [];
 
-    await getAllFilesInFolder(folderPath, filesData);
+    const mode: "desktop" | "web" =
+    vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop";
+    log(mode === "web" ? "== Web mode ==" : "== Desktop mode ==");
+    const baseUrl = process.env.QUANTAG_BASE_URL;
+    if (baseUrl) {
+        log("Running with QUANTAG_BASE_URL=" + baseUrl);
+    } else {
+        log("No QUANTAG_BASE_URL");
+    }
+
+    // Build SubmitOpts object
+    const opts: SubmitOpts = {
+      mode,
+      baseUrl: baseUrl ?? undefined
+    };
+    await getAllFilesInFolder(folderPath, filesData, rootFolder);
+
       // Prepare the JSON payload
     const payload = {
         sessionId: sessionId,
         files: filesData,
-        root: rootFolder
+        root: rootFolder,
+        opts 
     };
     log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
+
     try {
-      const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/submitFiles", {
+      var serverUrl = Config["submit.files"];
+      if (vscode.env.uiKind === vscode.UIKind.Web && baseUrl) {
+            const normalized = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+            serverUrl = `${normalized}/api2/public/submitFiles`;
+            log("Overriding server URL to: " + serverUrl);
+      }
+
+      const response = await fetch(serverUrl, {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -195,15 +230,18 @@ export async function getImage(sessionId: string) {
   const payload = {
     sessionId: sessionId
   };
+    const url = Config["get.image"];
+
+  log("session = " +sessionId + " send " + JSON.stringify(payload) + " to " + url);
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getImage", {
+    const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
     });
 
     if (!response.ok) {
-       log("reponse is not ok: ${response.status} - ${response.statusText}");
+       log(`reponse from ${url} is not ok: ${response.status} - ${response.statusText}`);
     }
 
     const responseData = await response.json();
@@ -219,52 +257,124 @@ export async function getImage(sessionId: string) {
 export async function readConfig(): Promise<any> {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
-    throw new Error('No workspace folder open');
+      log("No workspace folder open.");
+      return {};
   }
 
   const configPath = path.join(workspaceFolders[0].uri.fsPath, 'config.json');
   log("configPath: " + configPath);
   if (!fs.existsSync(configPath)) {
-    throw new Error(`No config.json file found in workplace folder ${configPath}`);
+      log(`No config.json found at ${configPath}`);
+      return {};
   }
 
   const raw = fs.readFileSync(configPath, 'utf8');
   return JSON.parse(raw);
 }
 
-export async function runOnIBMQ(srcData: string) {
+
+export function openJobsDashboard() {
+  vscode.env.openExternal(vscode.Uri.parse("https://cloud.quantag-it.com/jobs"));
+}
+
+export async function submitJobGeneral(srcData: string) {
   try {
-        var srcDataBase64 = btoa(srcData);
-        const URL = "https://quantum.quantag-it.com/api5/submit_ibm_job";
-        const config = await readConfig(); // read token, user_id, instance, backend
+    const cfg = await readConfig();
+    
+    const url =
+      (globalThis as any).Config?.["qvm.submit"] ??
+      cfg.submit_url ??
+      "https://quantum.quantag-it.com/api5/qvm/submit";
 
-        const payload = {
-            qasm: srcDataBase64,
-            user_id: config.user_id,
-            instance: config.instance,
-            token: config.token,
-            backend: config.backend
-        };
-       // log("Submitting job to: " + URL);
-       // log("Request payload: " + JSON.stringify(payload, null, 2));
+    // Base64 encode QASM
+    const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
+    const backend = cfg?.submit?.backend?.toLowerCase?.();
+    // === Handle Zurich Instruments setup file if present ===
+    const setupFile = cfg?.submit?.options?.setup;
+    if (setupFile) {
+      try {
+        const workspaceRoot =
+          vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? process.cwd();
 
-        const response = await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'}
-        });
+        const setupPath = path.isAbsolute(setupFile)
+          ? setupFile
+          : path.join(workspaceRoot, setupFile);
 
-          if (!response.ok) {
-            log("reponse is not ok: " + response.status + " - " + response.statusText);
-          } else {
-            const responseData = await response.json(); // 🔥 await this!
-            log("Successfully submitted job to IBM. Check status at https://quantum.quantag-it.com/profile");
-            log("Response JSON: " + JSON.stringify(responseData, null, 2));
-          }
-  } catch (error) {
-      log("Error :" + error);
+        const setupContent = fs.readFileSync(setupPath, "utf8");
+        const setupB64 = Buffer.from(setupContent, "utf8").toString("base64");
+
+        // Replace 'setup' with 'setup_b64' inside config
+        cfg.submit.options.setup_b64 = setupB64;
+        delete cfg.submit.options.setup;
+        log(`Loaded YAML setup from: ${setupPath}`);
+      } catch (err: any) {
+        const msg = `Error: could not read setup file '${setupFile}': ${err.message}`;
+        log(msg);
+        if (backend === "zi") {
+          log("Aborting submission: ZI backend requires a valid setup.yaml file.");
+          return;
+        }
+      }
+    }
+
+    // Just send config as-is
+    const payload = {
+      src: srcBase64,
+      config: cfg,
+    };
+    // === Log outgoing request (without huge Base64) ===
+ /*   const previewCfg = JSON.parse(JSON.stringify(cfg));
+    if (previewCfg.submit?.options?.setup_b64) {
+      previewCfg.submit.options.setup_b64 =
+        `[base64 string, ${previewCfg.submit.options.setup_b64.length} chars]`;
+    }
+    const shortSrc = srcBase64.length > 80
+      ? srcBase64.slice(0, 80) + "... (" + srcBase64.length + " chars)"
+      : srcBase64;
+    log("=== Outgoing job payload ===");
+    log(`URL: ${url}`);
+    log(`Backend: ${backend}`);
+    log(`QASM (base64 preview): ${shortSrc}`);
+    log("Config snapshot:\n" + JSON.stringify(previewCfg, null, 2));
+    log("============================");*/
+    log("Submitting job to: " + url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+    });
+
+    const text = await response.text();
+    let json: any = null;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      /* ignore JSON parse error */
+    }
+
+    if (!response.ok) {
+      log(
+        `Submit failed: ${response.status} ${response.statusText} ${
+          json ? JSON.stringify(json) : text
+        }`
+      );
+      return;
+    }
+
+    const jobUid = json?.job_uid ?? json?.action_id ?? "(no id)";
+    log(`Job queued: ${jobUid}`);
+    log("Check status at https://cloud.quantag-it.com/jobs");
+
+    await showJobsPanel();
+  } catch (err: any) {
+    log("Submit error: " + (err?.message || String(err)));
   }
 }
+
+
 
 export async function runZISimulator(srcData: string) {
   var srcDataBase64 = btoa(srcData);
@@ -272,7 +382,9 @@ export async function runZISimulator(srcData: string) {
     src: srcDataBase64
   };
   try {
-    const response = await fetch("https://cryspprod2.quantag-it.com:4043/api2/run", {
+    const endpoint = Config["zi.run"];
+    log("Sending request to " + endpoint);
+    const response = await fetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -302,7 +414,7 @@ export async function getHtml(sessionId: string) {
     file: sessionId + ".html"
   };
   try {
-    const response = await fetch("https://cryspprod3.quantag-it.com:444/api2/public/getFile", {
+    const response = await fetch(Config["get.file"], {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -324,7 +436,7 @@ export async function getHtml(sessionId: string) {
 
 export async function openCircuitWeb(sessionId: string) {
 		// 	open browser pointing to web frontend
-		vscode.env.openExternal(vscode.Uri.parse("https://quantag-it.com/quantum/#/qcd?id="+sessionId));
+		vscode.env.openExternal(vscode.Uri.parse(Config["circuit.web"] + sessionId));
 }
 
 async function  showQirInNewTab(qirText: string) {
@@ -343,7 +455,7 @@ export async function QASMtoQIR(srcData: string) {
     };
 
     try {
-      const response = await fetch("https://api.quantag-it.com/qasm2qir", {
+      const response = await fetch(Config["qasm2qir"], {
           method: 'POST',
           body: JSON.stringify(payload),
           headers: {'Content-Type': 'application/json; charset=UTF-8'}
@@ -367,3 +479,8 @@ export async function QASMtoQIR(srcData: string) {
     }
 
 }
+
+export async function showJobsPanel() {
+  await vscode.commands.executeCommand('quantag.studio.viewJobs');
+}
+
