@@ -102,14 +102,18 @@ type SubmitOpts = {
 export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
     const filesData: { path: string; source: string }[] = [];
 
-    const mode: "desktop" | "web" =
-    vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop";
+    const mode: "desktop" | "web" = vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop";
     log(mode === "web" ? "== Web mode ==" : "== Desktop mode ==");
     const baseUrl = process.env.QUANTAG_BASE_URL;
     if (baseUrl) {
         log("Running with QUANTAG_BASE_URL=" + baseUrl);
     } else {
         log("No QUANTAG_BASE_URL");
+    }
+
+    if(mode==="web") {
+      log("Skipping file submit for web mode");
+      return;
     }
 
     // Build SubmitOpts object
