@@ -33,6 +33,7 @@ export const Config: Record<string, string> = {
   "circuit.web": "https://quantag-it.com/quantum/#/qcd?id=",
 
   "getuser.by_googleid": "https://quantum.quantag-it.com/api5/getuser_by_googleid",
+  "bqskit.optimize" : "https://cloud.quantag-it.com/api4/optimize",
 
   "get.config": "https://quantum.quantag-it.com/api5/get_config"
 };

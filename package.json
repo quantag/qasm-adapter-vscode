@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -146,6 +146,10 @@
           "when": "resourceLangId == openqasm"
         },
         {
+          "command": "quantagStudio.optimizeBQSkit",
+          "when": "resourceLangId == openqasm"
+        },
+        {
           "command": "extension.mock-debug.debugEditorContents",
           "when": "resourceLangId == python"
         },
@@ -218,6 +222,12 @@
         "title": "3D Circuit Visualizer"
       },
       {
+        "command": "quantagStudio.optimizeBQSkit",
+        "category": "Quantag Studio",
+        "title": "Optimize with BQSKit"
+      },
+      
+      {
         "command": "remoteFiles.openRemote",
         "category": "Quantag Studio",
         "title": "Open Remote File Explorer"
@@ -229,7 +239,7 @@
       },
       {
         "command": "quantagStudio.optimizeQasmPyZX",
-        "title": "Optimize QASM with PyZX",
+        "title": "Optimize with PyZX",
         "category": "Quantag Studio"
       },
       {

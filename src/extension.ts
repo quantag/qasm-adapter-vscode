@@ -283,7 +283,7 @@ context.subscriptions.push(
   );
 
 	context.subscriptions.push(
-	vscode.commands.registerCommand("quantagStudio.show3dVisualizer", async () => {
+		vscode.commands.registerCommand("quantagStudio.show3dVisualizer", async () => {
 		// Step 1: Read QASM from active file BEFORE opening WebView
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
@@ -341,9 +341,69 @@ context.subscriptions.push(
 	})
 	);
 
+
+ async function optimizeQasmCommandBQSKit() {
+  // Step 1: Read QASM from active file
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage("No active editor");
+    return;
+  }
+
+  const qasm = editor.document.getText();
+  if (!qasm) return;
+
+  const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+
+  // type=0 for BQSKit, others reserved
+  const optimizerType = 0;
+
+  try {
+	log("Send optimize request to " + Config["bqskit.optimize"]);
+    const response = await fetch(Config["bqskit.optimize"], {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: optimizerType, src: qasmB64 }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      log("Optimize failed: " + response.status + ": " + text);
+    }
+
+    const result: any = await response.json();
+    if (!result || typeof result.status !== "number") {
+      log("Bad JSON response from optimizer.");
+    }
+
+    if (result.status !== 0) {
+      log("Optimizer returned nonzero status: " + result.status);
+    }
+
+    if (typeof result.src !== "string" || result.src.length === 0) {
+      log("Optimizer returned empty src.");
+    }
+
+    const optimizedQasm = Buffer.from(result.src, "base64").toString("utf-8");
+	log(optimizedQasm);
+
+    const newDoc = await vscode.workspace.openTextDocument({
+      content: optimizedQasm,
+      language: "qasm",
+    });
+    vscode.window.showTextDocument(newDoc);
+    vscode.window.showInformationMessage("QASM optimized using BQSKit.");
+
+  } catch (err: any) {
+    vscode.window.showErrorMessage("Optimization failed: " + (err?.message || String(err)));
+  }
+}
+
+
   context.subscriptions.push(
     vscode.commands.registerCommand('quantagStudio.optimizeQasmPyZX', optimizeQasmCommandPyZX),
-    vscode.commands.registerCommand('quantagStudio.renderQasmPyZX', renderQasmCommandPyZX)
+    vscode.commands.registerCommand('quantagStudio.renderQasmPyZX', renderQasmCommandPyZX),
+	vscode.commands.registerCommand('quantagStudio.optimizeBQSkit', optimizeQasmCommandBQSKit)
   );
 
 
@@ -909,5 +969,3 @@ class MockDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAd
 		}
 	}
 }
-
-

@@ -1,3 +1,7 @@
+## 1.0.20
+* added BSQKit optimization
+
+
 ## 1.0.19
 * skip file submit for web mode
 
