@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { FileAccessor } from './mockRuntime';
-import { getHtml, getImage, openCircuitWeb, QASMtoQIR, runZISimulator, submitJobGeneral } from './tools';
+import { getHtml, getImage, QASMtoQIR, submitJobGeneral } from './tools';
 
 let currentSessionID: string;
 

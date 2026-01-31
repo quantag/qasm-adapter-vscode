@@ -1,19 +1,17 @@
 {
   "apikey": "take from https://cloud.quantag-it.com/profile",
+
   "debug": {
-    "server": "node3.quantag-it.com:5555"    
+    "server": "node3.quantag-it.com:5555"
   },
+
   "run": {
-    "server": "node3.quantag-it.com:5555"  
- },
+    "server": "node3.quantag-it.com:5555"
+  },
+
   "submit": {
-    "backend": "ibm",
-    "mode": "sampler",
-    "shots": 1024,
-    "options": {
-      "ibm_token": "take from IBMQ",
-      "instance": "",
-      "device": ""
-    }
- }
+    "provider": "cloud",
+    "node": "auto",
+    "shots": 1024
+  }
 }
