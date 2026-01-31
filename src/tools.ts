@@ -284,28 +284,42 @@ export function openJobsDashboard() {
 export async function submitJobGeneral(srcData: string) {
   try {
     const cfg = await readConfig();
-    
-    const url =
-      (globalThis as any).Config?.["qvm.submit"] ??
-      cfg.submit_url ??
-      "https://quantum.quantag-it.com/api5/qvm/submit";
 
-    // Base64 encode QASM
+    const apiKey = cfg?.apikey;
+    if (!apiKey) {
+      log("Missing apikey in config.json");
+      return;
+    }
+
+    const url =
+      (globalThis as any).Config?.["cloud.submit"] ??
+      cfg?.submit?.url ??
+      "https://cloud.quantag-it.com/api/jobs/submit";
+
     const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
 
-    // Just send config as-is
-    const payload = {
+    const shots = Number(cfg?.submit?.shots ?? 1024);
+    const node = (cfg?.submit?.node ?? "auto") as string;
+
+    const payload: any = {
       src: srcBase64,
-      config: cfg,
+      shots: shots,
     };
-    // === Log outgoing request (without huge Base64) ===
+
+    // If node is pinned, send it. If "auto", omit it.
+    if (node && node !== "auto") {
+      payload.node_id = node;
+    }
+
     log("Submitting job to: " + url);
+    log("Submit params: provider=cloud node=" + node + " shots=" + shots);
 
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
+        "X-API-Key": apiKey,
       },
     });
 
@@ -314,7 +328,7 @@ export async function submitJobGeneral(srcData: string) {
     try {
       json = text ? JSON.parse(text) : null;
     } catch {
-      /* ignore JSON parse error */
+      /* ignore */
     }
 
     if (!response.ok) {
@@ -326,8 +340,18 @@ export async function submitJobGeneral(srcData: string) {
       return;
     }
 
-    const jobUid = json?.job_uid ?? json?.action_id ?? "(no id)";
-    log(`Job queued: ${jobUid}`);
+    if (json?.status !== 0) {
+      log("Submit returned error: " + (json ? JSON.stringify(json) : text));
+      return;
+    }
+
+    const jobUid = json?.job_uid ?? "(no id)";
+    const usedNode = json?.node_id;
+    const rate = json?.rate;
+
+    log("Job queued: " + jobUid);
+    if (usedNode) log("Node: " + usedNode);
+    if (rate != null) log("Rate: " + rate);
     log("Check status at https://cloud.quantag-it.com/jobs");
 
     await showJobsPanel();
@@ -335,7 +359,6 @@ export async function submitJobGeneral(srcData: string) {
     log("Submit error: " + (err?.message || String(err)));
   }
 }
-
 
 
 export async function runZISimulator(srcData: string) {
