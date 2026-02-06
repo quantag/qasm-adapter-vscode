@@ -294,7 +294,7 @@ export async function submitJobGeneral(srcData: string) {
     const url =
       (globalThis as any).Config?.["cloud.submit"] ??
       cfg?.submit?.url ??
-      "https://cloud.quantag-it.com/api/jobs/submit";
+      "https://quantum.quantag-it.com/api/jobs/submit";
 
     const srcBase64 = Buffer.from(srcData, "utf8").toString("base64");
 
