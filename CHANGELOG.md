@@ -1,3 +1,6 @@
+## 1.0.21
+* submit jobs to quantag cloud
+
 ## 1.0.20
 * added BSQKit optimization
 
