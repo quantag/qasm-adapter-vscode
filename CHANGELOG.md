@@ -1,3 +1,6 @@
+## 1.0.22
+* updated API in jobsPanels.ts
+
 ## 1.0.21
 * submit jobs to quantag cloud
 

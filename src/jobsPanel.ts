@@ -13,6 +13,7 @@ type JobRow = {
   error_msg?: string;
 };
 
+const API_BASE = "https://quantum.quantag-it.com/api";
 
 
 async function getUserIdFromApiKey(apikey: string): Promise<string> {
@@ -91,24 +92,28 @@ async function deleteJob(apikey: string, jobUid: string): Promise<void> {
 }
 
 async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
-  const url = `https://quantum.quantag-it.com/api5/users/${encodeURIComponent(userId)}/jobs`;
+  const url = `${API_BASE}/jobs?user_id=${encodeURIComponent(userId)}&limit=100`;
+
   const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
   const text = await res.text();
   if (!res.ok) throw new Error(`Jobs request failed: ${res.status} ${res.statusText} ${text}`);
 
-  const rows = text ? JSON.parse(text) : [];
-  // rows are DB-shaped with fields like: uid, status_str, qpu, instance, submitted_at, end_time, results, etc.
-  // Map them to the UI model
+  //log(text);
+  const payload = text ? JSON.parse(text) : {}
+
+  const rows = Array.isArray(payload?.jobs) ? payload.jobs : [];
+  
   return rows.map((r: any) => ({
     job_uid: r.uid,
-    status: r.status_str,
+    status: String(r.status),
     backend: r.qpu,
     mode: r.mode || "",          // if you store it
-    shots: r.shots || undefined, // if you store it
-    submitted_at: r.submitted_at,
-    qpu: r.qpu,
-    error_msg: r.results?.error || undefined
+    shots: r.shots, 
+    submitted_at: r.created_at,
+   // qpu: r.qpu,
+    error_msg: r.job_error 
   }));
+
 }
 
 
