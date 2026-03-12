@@ -10,6 +10,7 @@ type JobRow = {
   shots?: number;
   submitted_at?: string;  // ISO
   qpu?: string;           // device name if present
+  results?: any;
   error_msg?: string;
 };
 
@@ -91,26 +92,39 @@ async function deleteJob(apikey: string, jobUid: string): Promise<void> {
   }
 }
 
+function statusToText(status: number): string {
+  switch (status) {
+    case 0: return "Submitted";
+    case 1: return "Started";
+    case 2: return "Failed to Start";
+    case 3: return "Done";
+    case 4: return "Failed";
+    default: return "Unknown";
+  }
+}
+
 async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
   const url = `${API_BASE}/jobs?user_id=${encodeURIComponent(userId)}&limit=100`;
 
   const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
   const text = await res.text();
-  if (!res.ok) throw new Error(`Jobs request failed: ${res.status} ${res.statusText} ${text}`);
+  if (!res.ok) {
+    throw new Error(`Jobs request failed: ${res.status} ${res.statusText} ${text}`);
+  }
 
-  //log(text);
-  const payload = text ? JSON.parse(text) : {}
+  log(text);
 
+  const payload = text ? JSON.parse(text) : {};
   const rows = Array.isArray(payload?.jobs) ? payload.jobs : [];
   
   return rows.map((r: any) => ({
     job_uid: r.uid,
-    status: String(r.status),
-    backend: r.qpu,
-    mode: r.mode || "",          // if you store it
-    shots: r.shots, 
+    status: statusToText(Number(r.status)),
+    backend: r.node_uid,
+    target: r.job_result?.target || "",        
+    shots: r.shots,
+    results: r.job_result?.result ?? null,
     submitted_at: r.created_at,
-   // qpu: r.qpu,
     error_msg: r.job_error 
   }));
 
@@ -169,14 +183,6 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
     } else if (msg?.type === "copy") {
       await vscode.env.clipboard.writeText(String(msg.value || ""));
       vscode.window.showInformationMessage("Copied to clipboard.");
-    } else if (msg?.type === "downloadResults") {
-      const uid = String(msg.uid || "");
-      if (!uid) {throw new Error("Missing job UID");}
-
-      const details = await getJobDetails(apikey, uid);
-      // Try common shapes: {results: ...} or just the result object
-      const results = details?.results ?? details?.data ?? details;
-      await saveJsonToFile(`${uid}_results.json`, results);
     } else if (msg?.type === "downloadInput") {
         const uid = String(msg.uid || "");
         if (!uid) throw new Error("Missing job UID");
@@ -262,10 +268,10 @@ function getWebviewHtml(dashboardUrl: string): string {
         <tr>
           <th style="width:26%">UID</th>
           <th style="width:10%">Status</th>
-          <th style="width:12%">Backend</th>
-          <th style="width:12%">QPU</th>
-          <th style="width:10%">Mode</th>
+          <th style="width:12%">Node UID</th>
+          <th style="width:10%">Target</th>
           <th style="width:8%">Shots</th>
+          <th style="width:16%">Results</th>
           <th style="width:12%">Submitted</th>
           <th style="width:20%">Actions</th>
         </tr>
@@ -326,23 +332,24 @@ function getWebviewHtml(dashboardUrl: string): string {
         const stClass = "status-" + st;
         const uid = j.job_uid || "";
         const backend = j.backend || "";
-        const qpu = j.qpu || "";
-        const mode = j.mode || "";
+        const target = j.target;
         const shots = (j.shots != null && j.shots !== "") ? j.shots : "";
         const submitted = fmtDate(j.submitted_at);
+        const results = j.results ? JSON.stringify(j.results) : "";
 
         return \`
           <tr>
             <td class="wrap" title="\${uid}">\${uid}</td>
             <td class="\${stClass}">\${st || ""}</td>
-            <td>\${backend}</td>
-            <td>\${qpu}</td>
-            <td>\${mode}</td>
+            <td class="wrap" title="\${backend}">\${backend}</td>
+            <td class="wrap" title="\${target}">\${target}</td>
             <td>\${shots}</td>
+            <td class="wrap" title="\${results}">
+                  <button data-act="copyResults" data-val='\${results}'>Copy</button>
+            </td>
             <td>\${submitted}</td>
             <td class="actions">
               <button data-act="copy" data-val="\${uid}" title="Copy UID">Copy UID</button>
-              <button data-act="dlResults" data-uid="\${uid}" title="Download results JSON">Download Results</button>
               <button data-act="dlInput" data-uid="\${uid}" title="Download input QASM">Download Input</button>
               <button data-act="delete" data-uid="\${uid}" title="Delete job">Delete</button>
             </td>
@@ -380,12 +387,15 @@ function getWebviewHtml(dashboardUrl: string): string {
 
       if (t.dataset.act === "copy") {
         vscode.postMessage({ type: "copy", value: t.dataset.val });
-      } else if (t.dataset.act === "dlResults") {
-        vscode.postMessage({ type: "downloadResults", uid: t.dataset.uid });
       } else if (t.dataset.act === "dlInput") {
         vscode.postMessage({ type: "downloadInput", uid: t.dataset.uid });
       } else if (t.dataset.act === "delete") {
         vscode.postMessage({ type: "deleteJob", uid: t.dataset.uid });
+      } else if (t.dataset.act === "copyResults") {
+        vscode.postMessage({
+          type: "copy",
+          value: t.dataset.val
+        });
       }
     });
   </script>
