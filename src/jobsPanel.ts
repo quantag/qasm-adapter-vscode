@@ -12,6 +12,7 @@ type JobRow = {
   qpu?: string;           // device name if present
   results?: any;
   error_msg?: string;
+  input_b64?: string;
 };
 
 const API_BASE = "https://quantum.quantag-it.com/api";
@@ -124,6 +125,7 @@ async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
     target: r.job_result?.target || "",        
     shots: r.shots,
     results: r.job_result?.result ?? null,
+    input_b64: r.src ?? "",
     submitted_at: r.created_at,
     error_msg: r.job_error 
   }));
@@ -183,19 +185,6 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
     } else if (msg?.type === "copy") {
       await vscode.env.clipboard.writeText(String(msg.value || ""));
       vscode.window.showInformationMessage("Copied to clipboard.");
-    } else if (msg?.type === "downloadInput") {
-        const uid = String(msg.uid || "");
-        if (!uid) throw new Error("Missing job UID");
-        const details = await getJobDetails(apikey, uid);
-        // Try common keys: "input" (text), "qasm_b64" (base64), or nested
-        const rawInput =
-          details?.input ??
-          details?.qasm_b64 ??
-          details?.data?.input ??
-          "";
-        if (!rawInput) throw new Error("Input not found on job");
-        const text = decodeMaybeBase64ToText(String(rawInput));
-        await saveTextToFile(`${uid}.qasm`, text, panel);
     } else if (msg?.type === "deleteJob") {
       const uid = String(msg.uid || "");
       if (!uid) throw new Error("Missing job UID");
@@ -295,6 +284,13 @@ function getWebviewHtml(dashboardUrl: string): string {
 
     // In-memory data
     let jobs = [];
+    function base64ToText(b64) {
+      try {
+        return atob(b64);
+      } catch {
+        return b64;
+      }
+    }
 
     function fmtDate(s) {
       if (!s) return "";
@@ -350,7 +346,7 @@ function getWebviewHtml(dashboardUrl: string): string {
             <td>\${submitted}</td>
             <td class="actions">
               <button data-act="copy" data-val="\${uid}" title="Copy UID">Copy UID</button>
-              <button data-act="dlInput" data-uid="\${uid}" title="Download input QASM">Download Input</button>
+              <button data-act="copyInput" data-val="\${j.input_b64}" title="Copy input QASM">Copy Input</button>
               <button data-act="delete" data-uid="\${uid}" title="Delete job">Delete</button>
             </td>
           </tr>\`;
@@ -387,8 +383,12 @@ function getWebviewHtml(dashboardUrl: string): string {
 
       if (t.dataset.act === "copy") {
         vscode.postMessage({ type: "copy", value: t.dataset.val });
-      } else if (t.dataset.act === "dlInput") {
-        vscode.postMessage({ type: "downloadInput", uid: t.dataset.uid });
+      } else if (t.dataset.act === "copyInput") {
+        const decoded = base64ToText(t.dataset.val);
+        vscode.postMessage({
+          type: "copy",
+          value: decoded
+        });
       } else if (t.dataset.act === "delete") {
         vscode.postMessage({ type: "deleteJob", uid: t.dataset.uid });
       } else if (t.dataset.act === "copyResults") {
