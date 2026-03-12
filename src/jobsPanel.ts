@@ -85,11 +85,19 @@ async function saveJsonToFile(defaultName: string, obj: any) {
 
 
 async function deleteJob(apikey: string, jobUid: string): Promise<void> {
-  const url = `https://quantum.quantag-it.com/api5/qvm/job/${encodeURIComponent(jobUid)}`;
-  const res = await fetch(url, { method: "DELETE", headers: { "X-API-Key": apikey } });
-  if (!res.ok && res.status !== 204) {
-    const t = await res.text();
-    throw new Error(`Delete failed: ${res.status} ${res.statusText} ${t}`);
+  const url = `${API_BASE}/jobs/${encodeURIComponent(jobUid)}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "X-API-Key": apikey,
+      "Accept": "application/json"
+    }
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`Delete failed: ${res.status} ${res.statusText} ${text}`);
   }
 }
 
@@ -179,25 +187,25 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(async (msg) => {
   try {
     if (msg?.type === "refresh") {
-      await refresh();
-    } else if (msg?.type === "openDashboard") {
-      vscode.env.openExternal(vscode.Uri.parse(dashboardUrl));
-    } else if (msg?.type === "copy") {
-      await vscode.env.clipboard.writeText(String(msg.value || ""));
-      vscode.window.showInformationMessage("Copied to clipboard.");
-    } else if (msg?.type === "deleteJob") {
-      const uid = String(msg.uid || "");
-      if (!uid) { throw new Error("Missing job UID"); }
-      const ok = await vscode.window.showWarningMessage(
-          `Delete job ${uid}?`,
-          { modal: true },
-          "Delete"
-      );
-      if (ok === "Delete") {
-        await deleteJob(apikey, uid);
-        vscode.window.showInformationMessage(`Deleted job ${uid}`);
         await refresh();
-      }
+    } else if (msg?.type === "openDashboard") {
+        vscode.env.openExternal(vscode.Uri.parse(dashboardUrl));
+    } else if (msg?.type === "copy") {
+        await vscode.env.clipboard.writeText(String(msg.value || ""));
+        vscode.window.showInformationMessage("Copied to clipboard.");
+    } else if (msg?.type === "deleteJob") {
+        const uid = String(msg.uid || "");
+        if (!uid) { throw new Error("Missing job UID"); }
+        const ok = await vscode.window.showWarningMessage(
+            `Delete job ${uid}?`,
+            { modal: true },
+            "Delete"
+        );
+        if (ok === "Delete") {
+          await deleteJob(apikey, uid);
+          vscode.window.showInformationMessage(`Deleted job ${uid}`);
+          await refresh();
+        }
     }
   } catch (e: any) {
     panel.webview.postMessage({ type: "error", error: e?.message || String(e) });
