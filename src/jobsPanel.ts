@@ -187,7 +187,7 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage("Copied to clipboard.");
     } else if (msg?.type === "deleteJob") {
       const uid = String(msg.uid || "");
-      if (!uid) throw new Error("Missing job UID");
+      if (!uid) { throw new Error("Missing job UID"); }
       const ok = await vscode.window.showWarningMessage(
           `Delete job ${uid}?`,
           { modal: true },
