@@ -19,16 +19,25 @@ const API_BASE = "https://quantum.quantag-it.com/api";
 
 
 async function getUserIdFromApiKey(apikey: string): Promise<string> {
-  const url = "https://quantum.quantag-it.com/api5/check_apikey";
+  const url = `${API_BASE}/check_apikey`;
+
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apikey })
+    body: JSON.stringify({ apikey }),
   });
-  const json = await resp.json();
-  if (!resp.ok || !json?.valid) {
-    throw new Error("Invalid API key");
+
+  let json: any = null;
+  try {
+    json = await resp.json();
+  } catch {
+    throw new Error(`Server returned non-JSON response (${resp.status})`);
   }
+
+  if (!resp.ok || !json?.valid || !json?.user_id) {
+    throw new Error(json?.error || "Invalid API key");
+  }
+
   return String(json.user_id);
 }
 
