@@ -1,3 +1,6 @@
+## 1.0.25
+* added exec_time in Jobs Panel
+
 ## 1.0.24
 * added link btween Jobs Panel and Nodes Panel
 

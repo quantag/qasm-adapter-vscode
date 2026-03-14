@@ -9,10 +9,10 @@ type JobRow = {
   mode?: string;
   shots?: number;
   submitted_at?: string;  // ISO
-  qpu?: string;           // device name if present
   results?: any;
   error_msg?: string;
   input_b64?: string;
+  exec_time?: number;
 };
 
 const API_BASE = "https://quantum.quantag-it.com/api";
@@ -93,7 +93,8 @@ async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
     results: r.job_result?.result ?? null,
     input_b64: r.src ?? "",
     submitted_at: r.created_at,
-    error_msg: r.job_error 
+    error_msg: r.job_error,
+    exec_time: r.exec_time,
   }));
 
 }
@@ -230,6 +231,7 @@ function getWebviewHtml(dashboardUrl: string): string {
           <th style="width:12%">Node UID</th>
           <th style="width:10%">Target</th>
           <th style="width:8%">Shots</th>
+          <th style="width:10%">Exec Time</th>
           <th style="width:16%">Results</th>
           <th style="width:12%">Submitted</th>
           <th style="width:20%">Actions</th>
@@ -278,7 +280,7 @@ function getWebviewHtml(dashboardUrl: string): string {
       const rows = q
         ? jobs.filter(j => {
             const hay = [
-              j.job_uid, j.status, j.backend, j.qpu, j.mode,
+              j.job_uid, j.status, j.backend, j.mode,
               j.shots != null ? String(j.shots) : "",
               j.submitted_at || ""
             ].join(" ").toLowerCase();
@@ -298,6 +300,7 @@ function getWebviewHtml(dashboardUrl: string): string {
         const stClass = "status-" + st;
         const uid = j.job_uid || "";
         const backend = j.backend || "";
+        const execTime = (j.exec_time != null) ? Number(j.exec_time).toFixed(3) : "";
         const target = j.target;
         const shots = (j.shots != null && j.shots !== "") ? j.shots : "";
         const submitted = fmtDate(j.submitted_at);
@@ -312,6 +315,7 @@ function getWebviewHtml(dashboardUrl: string): string {
             </td>
             <td class="wrap" title="\${target}">\${target}</td>
             <td>\${shots}</td>
+            <td>\${execTime}</td>
             <td class="wrap" title="\${results}">
                   <button data-act="copyResults" data-val='\${results}'>Copy</button>
             </td>
