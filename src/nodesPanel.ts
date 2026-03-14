@@ -6,11 +6,9 @@ type NodeRow = {
   uid: string;
   node_id?: string | null;
   provider_id?: string | null;
-  endpoint?: string | null;
   status?: number;
   status_str?: string | null;
   gpu?: number;
-  qpu?: number;
   last_seen?: string | null;
   caps?: any;
 };
@@ -99,11 +97,9 @@ async function fetchNodes(_apikey: string): Promise<NodeRow[]> {
     uid: String(r.uid || ""),
     node_id: r.node_id ?? "",
     provider_id: r.provider_id ?? "",
-    endpoint: r.endpoint ?? "",
     status: Number(r.status ?? -1),
     status_str: r.status_str ?? "",
     gpu: Number(r.gpu ?? 0),
-    qpu: Number(r.qpu ?? 0),
     last_seen: r.last_seen ?? "",
     caps: parseCaps(r.caps)
   }));
@@ -214,11 +210,9 @@ function getWebviewHtml(dashboardUrl: string): string {
           <th style="width:16%">UID</th>
           <th style="width:12%">Status</th>
           <th style="width:8%">GPU</th>
-          <th style="width:8%">QPU</th>
           <th style="width:14%">GPU Model</th>
           <th style="width:14%">CPU</th>
           <th style="width:8%">RAM MB</th>
-          <th style="width:14%">Endpoint</th>
           <th style="width:10%">Last Seen</th>
           <th style="width:20%">Actions</th>
         </tr>
@@ -296,10 +290,8 @@ function getWebviewHtml(dashboardUrl: string): string {
               n.uid,
               n.node_id,
               n.provider_id,
-              n.endpoint,
               n.status_str,
               n.gpu,
-              n.qpu,
               getGpuModel(n.caps),
               getCpuModel(n.caps),
               n.last_seen
@@ -334,15 +326,12 @@ function getWebviewHtml(dashboardUrl: string): string {
             <td class="wrap" title="\${uid}">\${uid}</td>
             <td class="\${statusClass(st)}">\${st}</td>
             <td>\${n.gpu ?? ""}</td>
-            <td>\${n.qpu ?? ""}</td>
             <td class="wrap" title="\${gpuModel}">\${gpuModel}</td>
             <td class="wrap" title="\${cpuModel}">\${cpuModel}</td>
             <td>\${ramMb}</td>
-            <td class="wrap" title="\${endpoint}">\${endpoint}</td>
             <td>\${lastSeen}</td>
             <td class="actions">
               <button data-act="copy" data-val="\${uid}" title="Copy UID">Copy UID</button>
-              <button data-act="copy" data-val="\${endpoint}" title="Copy endpoint">Copy Endpoint</button>
               <button data-act="copy" data-val="\${capsText}" title="Copy capabilities">Copy Caps</button>
             </td>
           </tr>\`;
