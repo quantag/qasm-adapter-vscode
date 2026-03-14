@@ -24,7 +24,7 @@ export const Config: Record<string, string> = {
   // Backends
   "ibmq.submit": "https://quantum.quantag-it.com/api5/submit_ibm_job",
   "zi.run": "https://cryspprod2.quantag-it.com:4043/api2/run",
-  "qvm.submit": "https://quantum.quantag-it.com/api5/qvm/submit",
+  "qvm.submit": "https://quantum.quantag-it.com/api/jobs/submit",
 
   // Compiler
   "qasm2qir": "https://api.quantag-it.com/qasm2qir",
@@ -32,7 +32,7 @@ export const Config: Record<string, string> = {
   // Web frontend
   "circuit.web": "https://quantag-it.com/quantum/#/qcd?id=",
 
-  "getuser.by_googleid": "https://quantum.quantag-it.com/api5/getuser_by_googleid",
+  "getuser.by_googleid": "https://quantum.quantag-it.com/api/getuser_by_googleid",
   "bqskit.optimize" : "https://cloud.quantag-it.com/api4/optimize",
 
   "get.config": "https://quantum.quantag-it.com/api5/get_config"
