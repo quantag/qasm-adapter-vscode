@@ -12,6 +12,7 @@ import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
 import {submitFiles, log, parseJwt, readConfig} from './tools';
 import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
+import { openNodesPanel } from './nodesPanel';
 
 import * as path from 'path';
 
@@ -228,6 +229,11 @@ context.subscriptions.push(
 		vscode.commands.registerCommand("quantag.studio.viewJobs", async () => {
 			await openJobsPanel(context);
 		})
+	);
+	context.subscriptions.push(
+    vscode.commands.registerCommand("quantag.studio.viewNodes", async () => {
+        await openNodesPanel(context);
+    	})
 	);
 	
 

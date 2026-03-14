@@ -469,3 +469,7 @@ export async function showJobsPanel() {
   await vscode.commands.executeCommand('quantag.studio.viewJobs');
 }
 
+export async function showNodesPanel() {
+  await vscode.commands.executeCommand('quantag.studio.viewNodes');
+}
+
