@@ -151,6 +151,10 @@ export async function openJobsPanel(context: vscode.ExtensionContext) {
     } else if (msg?.type === "copy") {
         await vscode.env.clipboard.writeText(String(msg.value || ""));
         vscode.window.showInformationMessage("Copied to clipboard.");
+    } else if (msg?.type === "openNode") {
+        const nodeUid = String(msg.nodeUid || "");
+        if (!nodeUid) { throw new Error("Missing node UID"); }
+        await vscode.commands.executeCommand("quantag.studio.viewNodes", nodeUid);
     } else if (msg?.type === "deleteJob") {
         const uid = String(msg.uid || "");
         if (!uid) { throw new Error("Missing job UID"); }
@@ -303,7 +307,9 @@ function getWebviewHtml(dashboardUrl: string): string {
           <tr>
             <td class="wrap" title="\${uid}">\${uid}</td>
             <td class="\${stClass}">\${st || ""}</td>
-            <td class="wrap" title="\${backend}">\${backend}</td>
+            <td class="wrap" title="\${backend}">
+              <a href="#" data-act="openNode" data-node-uid="\${backend}">\${backend}</a>
+            </td>
             <td class="wrap" title="\${target}">\${target}</td>
             <td>\${shots}</td>
             <td class="wrap" title="\${results}">
@@ -349,21 +355,32 @@ function getWebviewHtml(dashboardUrl: string): string {
 
       if (t.dataset.act === "copy") {
         vscode.postMessage({ type: "copy", value: t.dataset.val });
+
       } else if (t.dataset.act === "copyInput") {
         const decoded = base64ToText(t.dataset.val);
         vscode.postMessage({
           type: "copy",
           value: decoded
         });
+
       } else if (t.dataset.act === "delete") {
         vscode.postMessage({ type: "deleteJob", uid: t.dataset.uid });
+
       } else if (t.dataset.act === "copyResults") {
         vscode.postMessage({
           type: "copy",
           value: t.dataset.val
         });
+
+      } else if (t.dataset.act === "openNode") {
+        e.preventDefault();
+        vscode.postMessage({
+          type: "openNode",
+          nodeUid: t.dataset.nodeUid
+        });
       }
     });
+
   </script>
 </body>
 </html>

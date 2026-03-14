@@ -1,3 +1,6 @@
+## 1.0.24
+* added link btween Jobs Panel and Nodes Panel
+
 ## 1.0.23
 * added nodes panel
 

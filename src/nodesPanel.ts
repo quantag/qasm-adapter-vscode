@@ -105,7 +105,7 @@ async function fetchNodes(_apikey: string): Promise<NodeRow[]> {
   }));
 }
 
-export async function openNodesPanel(context: vscode.ExtensionContext) {
+export async function openNodesPanel(context: vscode.ExtensionContext, focusNodeUid?: string) {
   const panel = vscode.window.createWebviewPanel(
     "quantagNodes",
     "Quantag Nodes",
@@ -131,7 +131,7 @@ export async function openNodesPanel(context: vscode.ExtensionContext) {
   async function refresh() {
     try {
       const data = await fetchNodes(apikey);
-      panel.webview.postMessage({ type: "nodes", data });
+      panel.webview.postMessage({ type: "nodes", data, focusNodeUid });
     } catch (e: any) {
       panel.webview.postMessage({ type: "error", error: e?.message || String(e) });
     }
@@ -156,7 +156,8 @@ export async function openNodesPanel(context: vscode.ExtensionContext) {
 }
 
 function getWebviewHtml(dashboardUrl: string): string {
-  return /* html */ `
+  
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -186,6 +187,10 @@ function getWebviewHtml(dashboardUrl: string): string {
     .actions button { padding:4px 8px; margin-right:4px; }
     .right { margin-left:auto; }
     .badge { padding:2px 6px; border:1px solid var(--line); border-radius:999px; font-size:11px; }
+    .focused-row {
+      outline: 2px solid var(--warn);
+      outline-offset: -2px;
+    }
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -233,6 +238,7 @@ function getWebviewHtml(dashboardUrl: string): string {
     const countBadge = document.getElementById("countBadge");
 
     let nodes = [];
+    let focusNodeUid = "";
 
     function fmtDate(s) {
       if (!s) return "";
@@ -309,7 +315,6 @@ function getWebviewHtml(dashboardUrl: string): string {
 
       nodesBody.innerHTML = rows.map(n => {
         const uid = n.uid || "";
-        const endpoint = n.endpoint || "";
         const st = n.status_str || "";
         const gpuModel = getGpuModel(n.caps);
         const cpuModel = getCpuModel(n.caps);
@@ -320,9 +325,10 @@ function getWebviewHtml(dashboardUrl: string): string {
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+        const rowClass = (focusNodeUid && uid === focusNodeUid) ? "focused-row" : "";
 
         return \`
-          <tr>
+          <tr class="\${rowClass}">
             <td class="wrap" title="\${uid}">\${uid}</td>
             <td class="\${statusClass(st)}">\${st}</td>
             <td>\${n.gpu ?? ""}</td>
@@ -342,6 +348,10 @@ function getWebviewHtml(dashboardUrl: string): string {
       const msg = event.data || {};
       if (msg.type === "nodes") {
         nodes = Array.isArray(msg.data) ? msg.data : [];
+        focusNodeUid = String(msg.focusNodeUid || "");
+        if (focusNodeUid) {
+          filterBox.value = focusNodeUid;
+        }
         render();
       } else if (msg.type === "error") {
         nodesBody.innerHTML = '<tr><td colspan="10" class="muted">Error: ' + (msg.error || "unknown") + '</td></tr>';

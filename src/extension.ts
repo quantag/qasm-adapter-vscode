@@ -231,11 +231,10 @@ context.subscriptions.push(
 		})
 	);
 	context.subscriptions.push(
-    vscode.commands.registerCommand("quantag.studio.viewNodes", async () => {
-        await openNodesPanel(context);
-    	})
+		vscode.commands.registerCommand("quantag.studio.viewNodes", async (nodeUid?: string) => {
+			await openNodesPanel(context, nodeUid);
+		})
 	);
-	
 
 	// compileAllInFile command
 	context.subscriptions.push(vscode.commands.registerCommand("quantag.guppy.compileAllInFile",
