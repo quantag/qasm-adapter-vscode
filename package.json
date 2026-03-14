@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -205,6 +205,11 @@
         "command": "quantag.studio.viewJobs",
         "category": "Quantag Studio",
         "title": "View Jobs"
+      },
+      {
+        "command": "quantag.studio.viewNodes",
+        "category": "Quantag Studio",
+        "title": "View Nodes"
       },
       {
         "command": "quantagStudio.cudaq.runKernel",
