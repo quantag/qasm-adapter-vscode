@@ -1,9 +1,3 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-/*
- * activateMockDebug.ts containes the shared extension code that can be executed both in node.js and the browser.
- */
 
 'use strict';
 
@@ -99,11 +93,6 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 			getHtml(currentSessionID);
 		}),	
 		vscode.commands.registerCommand('extension.mock-debug.QASMtoQIR', (extensionContext: vscode.ExtensionContext, resource: vscode.Uri) => {
-			//let targetResource = resource;
-			//if (!targetResource && vscode.window.activeTextEditor) {
-			//	targetResource = vscode.window.activeTextEditor.document.uri;
-			//}
-			//QASMtoQIR(currentSessionID);
 			const editor = vscode.window.activeTextEditor;
 			if (editor) {
 				let document = editor.document;
