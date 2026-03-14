@@ -41,57 +41,6 @@ async function getUserIdFromApiKey(apikey: string): Promise<string> {
   return String(json.user_id);
 }
 
-async function getJobDetails(apikey: string, jobUid: string): Promise<any> {
-  const url = `https://quantum.quantag-it.com/api5/qvm/job/${encodeURIComponent(jobUid)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { "X-API-Key": apikey, "Accept": "application/json" }
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Job read failed: ${res.status} ${res.statusText} ${text}`);
-  return text ? JSON.parse(text) : {};
-}
-
-function decodeMaybeBase64ToText(s: string): string {
-  try {
-    // If it already looks like text QASM, return as-is
-    if (s.startsWith("OPENQASM")) return s;
-    // Try base64 decode
-    const buf = Buffer.from(s, "base64");
-    const asText = buf.toString("utf8");
-    // Heuristic: if it now looks like QASM, accept
-    if (asText.startsWith("OPENQASM")) return asText;
-    // Otherwise return original
-    return s;
-  } catch {
-    return s;
-  }
-}
-
-async function saveTextToFile(defaultName: string, content: string, panel: vscode.WebviewPanel) {
-  const uri = await vscode.window.showSaveDialog(
-    { 
-      defaultUri: vscode.Uri.file(defaultName) 
-    }
-  );
-  if (!uri) return;
-  await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
-  vscode.window.showInformationMessage("Saved: " + uri.fsPath);
-}
-
-async function saveJsonToFile(defaultName: string, obj: any) {
-  const uri = await vscode.window.showSaveDialog({
-    defaultUri: vscode.Uri.file(defaultName),
-      filters: {
-        "JSON files": ["json"],
-      },
-    });
-  if (!uri) return;
-  const pretty = JSON.stringify(obj, null, 2);
-  await vscode.workspace.fs.writeFile(uri, Buffer.from(pretty, "utf8"));
-  vscode.window.showInformationMessage("Saved: " + uri.fsPath);
-}
-
 
 async function deleteJob(apikey: string, jobUid: string): Promise<void> {
   const url = `${API_BASE}/jobs/${encodeURIComponent(jobUid)}`;
