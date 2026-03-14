@@ -1,3 +1,6 @@
+## 1.0.23
+* added nodes panel
+
 ## 1.0.22
 * updated API in jobsPanels.ts
 
