@@ -1,3 +1,6 @@
+## 1.0.27
+* copy error message on results copy if job failed
+
 ## 1.0.26
 * added filename to Jobs Panel
 

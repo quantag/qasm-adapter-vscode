@@ -308,7 +308,12 @@ function getWebviewHtml(dashboardUrl: string): string {
         const target = j.target;
         const shots = (j.shots != null && j.shots !== "") ? j.shots : "";
         const submitted = fmtDate(j.submitted_at);
+
         const results = j.results ? JSON.stringify(j.results) : "";
+        const errorMsg = j.error_msg || "";
+        const resultsCopyValue = results || errorMsg || "";
+        const resultsTitle = results || errorMsg || "";
+        const resultsCopyEncoded = encodeURIComponent(resultsCopyValue);
 
         return \`
           <tr>
@@ -321,8 +326,8 @@ function getWebviewHtml(dashboardUrl: string): string {
             <td class="wrap" title="\${target}">\${target}</td>
             <td>\${shots}</td>
             <td>\${execTime}</td>
-            <td class="wrap" title="\${results}">
-                  <button data-act="copyResults" data-val='\${results}'>Copy</button>
+            <td class="wrap" title="\${resultsTitle}">
+                  <button data-act="copyResults" data-val="\${resultsCopyEncoded}">Copy</button>
             </td>
             <td>\${submitted}</td>
             <td class="actions">
@@ -376,11 +381,15 @@ function getWebviewHtml(dashboardUrl: string): string {
         vscode.postMessage({ type: "deleteJob", uid: t.dataset.uid });
 
       } else if (t.dataset.act === "copyResults") {
-        vscode.postMessage({
-          type: "copy",
-          value: t.dataset.val
-        });
-
+          let value = t.dataset.val || "";
+          try {
+            value = decodeURIComponent(value);
+          } catch {
+          }
+          vscode.postMessage({
+            type: "copy",
+            value: value
+          });
       } else if (t.dataset.act === "openNode") {
         e.preventDefault();
         vscode.postMessage({
