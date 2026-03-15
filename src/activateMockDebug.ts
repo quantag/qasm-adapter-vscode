@@ -59,7 +59,13 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 	
 				// Get the document text
 				const documentText = document.getText();
-				submitJobGeneral(documentText);
+
+				const filename =
+					document.uri.scheme === "file"
+						? vscode.workspace.asRelativePath(document.uri, false)
+						: document.fileName;
+
+				submitJobGeneral(documentText, filename);
 			}
 		}),
 		

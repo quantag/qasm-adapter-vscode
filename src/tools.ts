@@ -281,7 +281,7 @@ export function openJobsDashboard() {
   vscode.env.openExternal(vscode.Uri.parse("https://cloud.quantag-it.com/jobs"));
 }
 
-export async function submitJobGeneral(srcData: string) {
+export async function submitJobGeneral(srcData: string, filename: string) {
   try {
     const cfg = await readConfig();
 
@@ -305,6 +305,11 @@ export async function submitJobGeneral(srcData: string) {
       src: srcBase64,
       shots: shots,
     };
+
+    if (filename) {
+      payload.filename = filename;
+    }
+
 
     // If node is pinned, send it. If "auto", omit it.
     if (node && node !== "auto") {
