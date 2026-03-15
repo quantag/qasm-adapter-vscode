@@ -1,3 +1,6 @@
+## 1.0.28
+* small fix in JobsPanel
+
 ## 1.0.27
 * copy error message on results copy if job failed
 
