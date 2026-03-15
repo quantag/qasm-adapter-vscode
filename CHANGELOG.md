@@ -1,3 +1,6 @@
+## 1.0.29
+* show number of qubits in JobsPanel
+
 ## 1.0.28
 * small fix in JobsPanel
 

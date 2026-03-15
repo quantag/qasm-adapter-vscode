@@ -14,6 +14,7 @@ type JobRow = {
   input_b64?: string;
   exec_time?: number;
   filename?: string;
+  qubits?: number;
 };
 
 const API_BASE = "https://quantum.quantag-it.com/api";
@@ -97,6 +98,7 @@ async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
     error_msg: r.job_error,
     exec_time: r.exec_time,
     filename: r.filename ?? "",
+    qubits: r.qubits ?? 0,
   }));
 
 }
@@ -228,16 +230,17 @@ function getWebviewHtml(dashboardUrl: string): string {
     <table id="jobsTable" aria-label="Jobs">
       <thead>
         <tr>
-          <th style="width:20%">UID</th>
-          <th style="width:16%">Filename</th>
+          <th style="width:10%">UID</th>
+          <th style="width:10%">Filename</th>
           <th style="width:10%">Status</th>
-          <th style="width:12%">Node UID</th>
+          <th style="width:10%">Node UID</th>
           <th style="width:10%">Target</th>
           <th style="width:8%">Shots</th>
-          <th style="width:10%">Exec Time</th>
-          <th style="width:12%">Results</th>
-          <th style="width:12%">Submitted</th>
-          <th style="width:20%">Actions</th>
+          <th style="width:8%">Exec Time</th>
+          <th style="width:6%">Qubits</th>
+          <th style="width:8%">Results</th>
+          <th style="width:8%">Submitted</th>
+          <th style="width:10%">Actions</th>
         </tr>
       </thead>
       <tbody id="jobsBody">
@@ -305,6 +308,7 @@ function getWebviewHtml(dashboardUrl: string): string {
         const filename = j.filename || "";
         const backend = j.backend || "";
         const execTime = (j.exec_time != null) ? Number(j.exec_time).toFixed(3) : "";
+        const qubits = j.qubits;
         const target = j.target;
         const shots = (j.shots != null && j.shots !== "") ? j.shots : "";
         const submitted = fmtDate(j.submitted_at);
@@ -325,6 +329,7 @@ function getWebviewHtml(dashboardUrl: string): string {
             <td class="wrap" title="\${target}">\${target}</td>
             <td>\${shots}</td>
             <td>\${execTime}</td>
+            <td>\${qubits}</td>
             <td>
               <button data-act="copyResults" data-val="\${resultsCopyEncoded}">Copy</button>
             </td>
