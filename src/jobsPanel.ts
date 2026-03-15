@@ -13,6 +13,7 @@ type JobRow = {
   error_msg?: string;
   input_b64?: string;
   exec_time?: number;
+  filename?: string;
 };
 
 const API_BASE = "https://quantum.quantag-it.com/api";
@@ -95,6 +96,7 @@ async function fetchJobs(apikey: string, userId: string): Promise<JobRow[]> {
     submitted_at: r.created_at,
     error_msg: r.job_error,
     exec_time: r.exec_time,
+    filename: r.filename ?? "",
   }));
 
 }
@@ -226,19 +228,20 @@ function getWebviewHtml(dashboardUrl: string): string {
     <table id="jobsTable" aria-label="Jobs">
       <thead>
         <tr>
-          <th style="width:26%">UID</th>
+          <th style="width:20%">UID</th>
+          <th style="width:16%">Filename</th>
           <th style="width:10%">Status</th>
           <th style="width:12%">Node UID</th>
           <th style="width:10%">Target</th>
           <th style="width:8%">Shots</th>
           <th style="width:10%">Exec Time</th>
-          <th style="width:16%">Results</th>
+          <th style="width:12%">Results</th>
           <th style="width:12%">Submitted</th>
           <th style="width:20%">Actions</th>
         </tr>
       </thead>
       <tbody id="jobsBody">
-        <tr><td colspan="8" class="muted">Loading...</td></tr>
+        <tr><td colspan="10" class="muted">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -280,7 +283,7 @@ function getWebviewHtml(dashboardUrl: string): string {
       const rows = q
         ? jobs.filter(j => {
             const hay = [
-              j.job_uid, j.status, j.backend, j.mode,
+              j.job_uid, j.filename || "", j.status, j.backend, j.mode,
               j.shots != null ? String(j.shots) : "",
               j.submitted_at || ""
             ].join(" ").toLowerCase();
@@ -291,7 +294,7 @@ function getWebviewHtml(dashboardUrl: string): string {
       countBadge.textContent = String(rows.length);
 
       if (!rows.length) {
-        jobsBody.innerHTML = '<tr><td colspan="8" class="muted">No jobs</td></tr>';
+        jobsBody.innerHTML = '<tr><td colspan="10" class="muted">No jobs</td></tr>';
         return;
       }
 
@@ -299,6 +302,7 @@ function getWebviewHtml(dashboardUrl: string): string {
         const st = (j.status || "").toUpperCase();
         const stClass = "status-" + st;
         const uid = j.job_uid || "";
+        const filename = j.filename || "";
         const backend = j.backend || "";
         const execTime = (j.exec_time != null) ? Number(j.exec_time).toFixed(3) : "";
         const target = j.target;
@@ -309,6 +313,7 @@ function getWebviewHtml(dashboardUrl: string): string {
         return \`
           <tr>
             <td class="wrap" title="\${uid}">\${uid}</td>
+            <td class="wrap" title="\${filename}">\${filename}</td>
             <td class="\${stClass}">\${st || ""}</td>
             <td class="wrap" title="\${backend}">
               <a href="#" data-act="openNode" data-node-uid="\${backend}">\${backend}</a>

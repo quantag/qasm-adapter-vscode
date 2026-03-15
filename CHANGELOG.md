@@ -1,3 +1,6 @@
+## 1.0.26
+* added filename to Jobs Panel
+
 ## 1.0.25
 * added exec_time in Jobs Panel
 
