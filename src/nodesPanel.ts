@@ -212,12 +212,12 @@ function getWebviewHtml(dashboardUrl: string): string {
     <table id="nodesTable" aria-label="Nodes">
       <thead>
         <tr>
-          <th style="width:16%">UID</th>
-          <th style="width:12%">Status</th>
+          <th style="width:15%">UID</th>
+          <th style="width:6%">Status</th>
           <th style="width:8%">GPU</th>
-          <th style="width:14%">CPU</th>
+          <th style="width:8%">CPU</th>
           <th style="width:8%">RAM MB</th>
-          <th style="width:10%">Last Seen</th>
+          <th style="width:8%">Last Seen</th>
           <th style="width:20%">Actions</th>
         </tr>
       </thead>
