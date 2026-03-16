@@ -1,3 +1,6 @@
+## 1.0.30
+* added CPU Load nad GPU Load in Nodes panel
+
 ## 1.0.29
 * show number of qubits in JobsPanel
 

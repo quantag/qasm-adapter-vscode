@@ -105,6 +105,29 @@ async function fetchNodes(_apikey: string): Promise<NodeRow[]> {
   }));
 }
 
+function toPercent(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return "-";
+  return (n * 100).toFixed(2) + "%";
+}
+
+
+async function fetchNodeStatus(uid: string): Promise<any> {
+  const url = `${API_BASE}/nodes/${encodeURIComponent(uid)}/status`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { "Accept": "application/json" }
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Node status request failed: ${res.status} ${res.statusText} ${text}`);
+  }
+
+  return text ? JSON.parse(text) : {};
+}
+
 export async function openNodesPanel(context: vscode.ExtensionContext, focusNodeUid?: string) {
   const panel = vscode.window.createWebviewPanel(
     "quantagNodes",
@@ -146,7 +169,16 @@ export async function openNodesPanel(context: vscode.ExtensionContext, focusNode
       } else if (msg?.type === "copy") {
         await vscode.env.clipboard.writeText(String(msg.value || ""));
         vscode.window.showInformationMessage("Copied to clipboard.");
+      }  else if (msg?.type === "status") {
+        const uid = String(msg.uid || "");
+        if (!uid) {
+          throw new Error("Missing node UID");
+        }
+
+        const data = await fetchNodeStatus(uid);
+        panel.webview.postMessage({ type: "nodeStatus", uid, data });
       }
+
     } catch (e: any) {
       panel.webview.postMessage({ type: "error", error: e?.message || String(e) });
     }
@@ -212,13 +244,13 @@ function getWebviewHtml(dashboardUrl: string): string {
     <table id="nodesTable" aria-label="Nodes">
       <thead>
         <tr>
-          <th style="width:15%">UID</th>
+          <th style="width:10%">UID</th>
           <th style="width:6%">Status</th>
           <th style="width:8%">GPU</th>
           <th style="width:8%">CPU</th>
           <th style="width:8%">RAM MB</th>
           <th style="width:8%">Last Seen</th>
-          <th style="width:20%">Actions</th>
+          <th style="width:20%">Load</th>
         </tr>
       </thead>
       <tbody id="nodesBody">
@@ -238,6 +270,12 @@ function getWebviewHtml(dashboardUrl: string): string {
 
     let nodes = [];
     let focusNodeUid = "";
+
+    function toPercent(v) {
+      const n = Number(v);
+      if (!isFinite(n)) return "-";
+      return (n * 100).toFixed(2) + "%";
+    }
 
     function fmtDate(s) {
       if (!s) return "";
@@ -336,9 +374,8 @@ function getWebviewHtml(dashboardUrl: string): string {
             <td class="wrap" title="\${cpuModel}">\${cpuModel}</td>
             <td>\${ramMb}</td>
             <td>\${lastSeen}</td>
-            <td class="actions">
-              <button data-act="copy" data-val="\${uid}" title="Copy UID">Copy UID</button>
-              <button data-act="copy" data-val="\${capsText}" title="Copy capabilities">Copy Caps</button>
+            <td class="actions" id="load-\${uid}">
+              <button data-act="status" data-uid="\${uid}">Status</button>
             </td>
           </tr>\`;
       }).join("");
@@ -356,6 +393,18 @@ function getWebviewHtml(dashboardUrl: string): string {
       } else if (msg.type === "error") {
         nodesBody.innerHTML = '<tr><td colspan="10" class="muted">Error: ' + (msg.error || "unknown") + '</td></tr>';
         countBadge.textContent = "0";
+      }  else if (msg.type === "nodeStatus") {
+        const uid = String(msg.uid || "");
+        const data = msg.data || {};
+        const raw = (data.vast && data.vast.raw) ? data.vast.raw : {};
+
+        const cpu = toPercent(raw.cpu_util);
+        const gpu = toPercent(raw.gpu_util);
+
+        const cell = document.getElementById("load-" + uid);
+        if (cell) {
+          cell.innerHTML = "CPU: " + cpu + "<br>GPU: " + gpu;
+        }
       }
     });
 
@@ -373,6 +422,19 @@ function getWebviewHtml(dashboardUrl: string): string {
       const t = e.target;
       if (!t || !t.dataset) return;
 
+      if (t.dataset.act === "status") {
+        const uid = String(t.dataset.uid || "");
+        if (!uid) return;
+
+        const cell = document.getElementById("load-" + uid);
+        if (cell) {
+          cell.innerHTML = "Loading...";
+        }
+
+        vscode.postMessage({ type: "status", uid });
+        return;
+      }
+       
       if (t.dataset.act === "copy") {
         vscode.postMessage({ type: "copy", value: t.dataset.val });
       }
