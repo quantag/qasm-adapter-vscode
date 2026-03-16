@@ -215,7 +215,6 @@ function getWebviewHtml(dashboardUrl: string): string {
           <th style="width:16%">UID</th>
           <th style="width:12%">Status</th>
           <th style="width:8%">GPU</th>
-          <th style="width:14%">GPU Model</th>
           <th style="width:14%">CPU</th>
           <th style="width:8%">RAM MB</th>
           <th style="width:10%">Last Seen</th>
@@ -331,8 +330,9 @@ function getWebviewHtml(dashboardUrl: string): string {
           <tr class="\${rowClass}">
             <td class="wrap" title="\${uid}">\${uid}</td>
             <td class="\${statusClass(st)}">\${st}</td>
-            <td>\${n.gpu ?? ""}</td>
-            <td class="wrap" title="\${gpuModel}">\${gpuModel}</td>
+            <td class="wrap" title="\${gpuModel}">
+              \${n.gpu ? n.gpu + "x " : ""}\${gpuModel}
+            </td>
             <td class="wrap" title="\${cpuModel}">\${cpuModel}</td>
             <td>\${ramMb}</td>
             <td>\${lastSeen}</td>
