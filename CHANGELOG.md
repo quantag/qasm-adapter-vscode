@@ -1,3 +1,6 @@
+# 1.0.31
+* added AI generation of quantum circuits
+
 ## 1.0.30
 * added CPU Load nad GPU Load in Nodes panel
 

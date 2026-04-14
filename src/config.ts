@@ -29,6 +29,8 @@ export const Config: Record<string, string> = {
   // Compiler
   "qasm2qir": "https://api.quantag-it.com/qasm2qir",
 
+  "ai.generate": "https://quantum.quantag-it.com/api/ai/generate",
+
   // Web frontend
   "circuit.web": "https://quantag-it.com/quantum/#/qcd?id=",
 

@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -138,6 +138,9 @@
           "when": "resourceLangId == openqasm"
         },
         {
+          "command": "quantagStudio.generateCircuitAI"
+        },
+        {
           "command": "quantagStudio.show3dVisualizer",
           "when": "resourceLangId == openqasm"
         },
@@ -188,6 +191,11 @@
         "category": "Quantag Studio",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
+      },
+      {
+        "command": "quantagStudio.generateCircuitAI",
+        "title": "Generate Quantum Circuit (AI)",
+        "category": "Quantag Studio"
       },
       {
         "command": "extension.mock-debug.submitEditorContents",

@@ -230,6 +230,51 @@ context.subscriptions.push(
 			await openJobsPanel(context);
 		})
 	);
+
+context.subscriptions.push(
+  vscode.commands.registerCommand("quantagStudio.generateCircuitAI", async () => {
+    const prompt = await vscode.window.showInputBox({
+      prompt: "Describe the quantum circuit",
+      placeHolder: "e.g. create Bell state with 2 qubits"
+    });
+
+    if (!prompt) return;
+    log("AI prompt: " + prompt);
+
+    try {
+      const response = await fetch(Config["ai.generate"], {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: prompt
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const result = await response.json();
+
+	  log("Received: " + JSON.stringify(result));
+
+      const qasm = result.qasm; 
+
+      const doc = await vscode.workspace.openTextDocument({
+        content: qasm,
+        language: "openqasm"
+      });
+
+      vscode.window.showTextDocument(doc);
+
+    } catch (err: any) {
+      vscode.window.showErrorMessage("AI generation failed: " + err.message);
+    }
+  })
+);
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand("quantag.studio.viewNodes", async (nodeUid?: string) => {
 			await openNodesPanel(context, nodeUid);
