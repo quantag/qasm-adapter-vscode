@@ -21,6 +21,9 @@ export const Config: Record<string, string> = {
   "pyzx.render": "https://cryspprod3.quantag-it.com:444/api16/render",
    "pyzx.render2": "https://cryspprod3.quantag-it.com:444/api16/rend",
 
+  // QEC
+  "qec.transform": "https://cryspprod3.quantag-it.com:444/api16/qec_transform",
+
   // Backends
   "ibmq.submit": "https://quantum.quantag-it.com/api5/submit_ibm_job",
   "zi.run": "https://cryspprod2.quantag-it.com:4043/api2/run",

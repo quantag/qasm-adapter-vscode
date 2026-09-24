@@ -453,7 +453,8 @@ context.subscriptions.push(
   context.subscriptions.push(
     vscode.commands.registerCommand('quantagStudio.optimizeQasmPyZX', optimizeQasmCommandPyZX),
     vscode.commands.registerCommand('quantagStudio.renderQasmPyZX', renderQasmCommandPyZX),
-	vscode.commands.registerCommand('quantagStudio.optimizeBQSkit', optimizeQasmCommandBQSKit)
+	vscode.commands.registerCommand('quantagStudio.optimizeBQSkit', optimizeQasmCommandBQSKit),
+	vscode.commands.registerCommand('quantagStudio.qecCircuitTransform', qecCircuitTransformCommand)
   );
 
 
@@ -642,6 +643,43 @@ async function renderQasmCommandPyZX() {
 	} catch (err: any) {
 		vscode.window.showErrorMessage("Rendering failed: " + err.message);
 	}
+}
+
+async function qecCircuitTransformCommand() {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return;
+	}
+
+	const qasm = editor.document.getText();
+    if (!qasm) return;
+    const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+
+  try {
+		const response = await fetch(Config["qec.transform"], {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qasm: qasmB64 }),
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error("Transform failed: " + response.status + ": " + text);
+		}
+
+		const result = await response.json();
+		const transformedQasm = Buffer.from(result.qasm, "base64").toString("utf-8");
+
+		const newDoc = await vscode.workspace.openTextDocument({
+			content: transformedQasm,
+			language: "qasm"
+		});
+		vscode.window.showTextDocument(newDoc);
+		vscode.window.showInformationMessage("QASM transformed using QEC.");
+  } catch (err: any) {
+    vscode.window.showErrorMessage("Transform failed: " + err.message);
+  }
 }
 
 

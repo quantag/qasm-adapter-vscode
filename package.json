@@ -175,6 +175,10 @@
         {
           "command": "quantagStudio.logout",
           "when": "quantag.isDesktop"
+        },
+        {
+          "command": "quantagStudio.qecCircuitTransform",
+          "when": "resourceLangId == openqasm"
         }
       ],
       "debug/variables/context": [
@@ -258,6 +262,11 @@
       {
         "command": "quantagStudio.renderQasmPyZX",
         "title": "Render QASM Diagram with PyZX",
+        "category": "Quantag Studio"
+      },
+      {
+        "command": "quantagStudio.qecCircuitTransform",
+        "title": "QEC Circuit Transform",
         "category": "Quantag Studio"
       },
       {
