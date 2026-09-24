@@ -1,3 +1,6 @@
+# 1.0.32
+* refresh build
+
 # 1.0.31
 * added AI generation of quantum circuits
 
