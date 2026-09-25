@@ -1,3 +1,12 @@
+# 1.0.34
+* Updated QEC Circuit Transform command with interactive UI:
+  * Select QEC Code (Steane, Surface, Repetition)
+  * Select Output Type (Physical Circuit or DEM)
+  * Configurable depolarizing noise probability
+
+# 1.0.33
+* Added QEC Circuit Transform command
+
 # 1.0.32
 * refresh build
 

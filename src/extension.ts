@@ -654,13 +654,49 @@ async function qecCircuitTransformCommand() {
 
 	const qasm = editor.document.getText();
     if (!qasm) return;
+
+	// 1. Ask for QEC Code
+	const codeSelection = await vscode.window.showQuickPick(
+		[
+			{ label: "Steane (7-qubit)", id: "steane" },
+			{ label: "Surface (d=3)", id: "surface_d3" },
+			{ label: "Surface (d=5)", id: "surface_d5" },
+			{ label: "Repetition", id: "repetition" }
+		],
+		{ placeHolder: "Select QEC Code" }
+	);
+	if (!codeSelection) return;
+
+	// 2. Ask for Output Type
+	const outputSelection = await vscode.window.showQuickPick(
+		[
+			{ label: "Physical Circuit (QASM)", id: "physical_circuit" },
+			{ label: "Detector Error Model (DEM)", id: "dem" }
+		],
+		{ placeHolder: "Select Output Type" }
+	);
+	if (!outputSelection) return;
+
+	// 3. Ask for Noise Probability
+	const noiseInput = await vscode.window.showInputBox({
+		prompt: "Enter depolarizing error probability (e.g., 0.01). Leave empty or 0 for none.",
+		value: "0"
+	});
+	if (noiseInput === undefined) return;
+	const noiseProb = parseFloat(noiseInput) || 0;
+
     const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
 
   try {
 		const response = await fetch(Config["qec.transform"], {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ qasm: qasmB64 }),
+			body: JSON.stringify({ 
+				qasm: qasmB64,
+				qec_code: codeSelection.id,
+				output_type: outputSelection.id,
+				noise_prob: noiseProb
+			}),
 		});
 
 		if (!response.ok) {
@@ -669,14 +705,14 @@ async function qecCircuitTransformCommand() {
 		}
 
 		const result = await response.json();
-		const transformedQasm = Buffer.from(result.qasm, "base64").toString("utf-8");
+		const transformedContent = Buffer.from(result.qasm, "base64").toString("utf-8");
 
 		const newDoc = await vscode.workspace.openTextDocument({
-			content: transformedQasm,
-			language: "qasm"
+			content: transformedContent,
+			language: outputSelection.id === "dem" ? "plaintext" : "qasm"
 		});
 		vscode.window.showTextDocument(newDoc);
-		vscode.window.showInformationMessage("QASM transformed using QEC.");
+		vscode.window.showInformationMessage(`QASM transformed using QEC (${codeSelection.label}).`);
   } catch (err: any) {
     vscode.window.showErrorMessage("Transform failed: " + err.message);
   }
