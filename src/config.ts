@@ -22,7 +22,7 @@ export const Config: Record<string, string> = {
    "pyzx.render2": "https://cryspprod3.quantag-it.com:444/api16/rend",
 
   // QEC
-  "qec.transform": "https://cryspprod3.quantag-it.com:444/api16/qec_transform",
+  "qec.transform": "https://cryspprod3.quantag-it.com:444/api22/qec_transform",
 
   // Backends
   "ibmq.submit": "https://quantum.quantag-it.com/api5/submit_ibm_job",

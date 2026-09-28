@@ -1,3 +1,9 @@
+# 1.0.36
+* Added QEC Circuit Transform interactive form
+
+# 1.0.35
+* Added QEC Circuit Transform api endpoint
+
 # 1.0.34
 * Updated QEC Circuit Transform command with interactive UI:
   * Select QEC Code (Steane, Surface, Repetition)

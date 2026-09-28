@@ -655,67 +655,200 @@ async function qecCircuitTransformCommand() {
 	const qasm = editor.document.getText();
     if (!qasm) return;
 
-	// 1. Ask for QEC Code
-	const codeSelection = await vscode.window.showQuickPick(
-		[
-			{ label: "Steane (7-qubit)", id: "steane" },
-			{ label: "Surface (d=3)", id: "surface_d3" },
-			{ label: "Surface (d=5)", id: "surface_d5" },
-			{ label: "Repetition", id: "repetition" }
-		],
-		{ placeHolder: "Select QEC Code" }
+	const panel = vscode.window.createWebviewPanel(
+		'qecTransform',
+		'QEC Transform Settings',
+		vscode.ViewColumn.Two, // Open to the side
+		{ enableScripts: true }
 	);
-	if (!codeSelection) return;
 
-	// 2. Ask for Output Type
-	const outputSelection = await vscode.window.showQuickPick(
-		[
-			{ label: "Physical Circuit (QASM)", id: "physical_circuit" },
-			{ label: "Detector Error Model (DEM)", id: "dem" }
-		],
-		{ placeHolder: "Select Output Type" }
-	);
-	if (!outputSelection) return;
+	panel.webview.html = getQecWebviewHtml();
 
-	// 3. Ask for Noise Probability
-	const noiseInput = await vscode.window.showInputBox({
-		prompt: "Enter depolarizing error probability (e.g., 0.01). Leave empty or 0 for none.",
-		value: "0"
-	});
-	if (noiseInput === undefined) return;
-	const noiseProb = parseFloat(noiseInput) || 0;
+	panel.webview.onDidReceiveMessage(async (message) => {
+		if (message.command === 'submit') {
+			try {
+				vscode.window.showInformationMessage(`Transforming QASM using ${message.qec_code}...`);
+				
+				const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+				const response = await fetch(Config["qec.transform"], {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ 
+						qasm: qasmB64,
+						qec_code: message.qec_code,
+						output_type: message.output_type,
+						noise_prob: message.noise_prob
+					}),
+				});
 
-    const qasmB64 = Buffer.from(qasm, "utf-8").toString("base64");
+				if (!response.ok) {
+					const text = await response.text();
+					throw new Error("Transform failed: " + response.status + ": " + text);
+				}
 
-  try {
-		const response = await fetch(Config["qec.transform"], {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ 
-				qasm: qasmB64,
-				qec_code: codeSelection.id,
-				output_type: outputSelection.id,
-				noise_prob: noiseProb
-			}),
-		});
+				const result = await response.json();
+				const transformedContent = Buffer.from(result.qasm, "base64").toString("utf-8");
 
-		if (!response.ok) {
-			const text = await response.text();
-			throw new Error("Transform failed: " + response.status + ": " + text);
+				const newDoc = await vscode.workspace.openTextDocument({
+					content: transformedContent,
+					language: message.output_type === "dem" ? "plaintext" : "qasm"
+				});
+				vscode.window.showTextDocument(newDoc);
+				vscode.window.showInformationMessage(`QASM transformed using QEC (${message.qec_code}).`);
+				
+				// Optional: Close the panel after generation
+				panel.dispose(); 
+			} catch (err: any) {
+				vscode.window.showErrorMessage("Transform failed: " + err.message);
+			}
 		}
+	});
+}
 
-		const result = await response.json();
-		const transformedContent = Buffer.from(result.qasm, "base64").toString("utf-8");
+function getQecWebviewHtml() {
+	return `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>QEC Transform</title>
+		<style>
+			body { 
+				font-family: var(--vscode-font-family); 
+				color: var(--vscode-editor-foreground); 
+				background-color: var(--vscode-editor-background); 
+				padding: 20px; 
+			}
+			.container { 
+				max-width: 600px; 
+				margin: 0 auto; 
+				display: flex; 
+				flex-direction: column; 
+				gap: 20px; 
+			}
+			h2 {
+				font-weight: normal;
+				margin-bottom: 0px;
+				border-bottom: 1px solid var(--vscode-panel-border);
+				padding-bottom: 10px;
+			}
+			label { 
+				font-weight: 600; 
+				margin-bottom: 6px; 
+			}
+			select, input[type="number"], button { 
+				background: var(--vscode-input-background); 
+				color: var(--vscode-input-foreground); 
+				border: 1px solid var(--vscode-input-border); 
+				padding: 8px; 
+				border-radius: 4px; 
+				font-family: inherit; 
+				font-size: 14px; 
+			}
+			select:focus, input:focus {
+				outline: 1px solid var(--vscode-focusBorder);
+				border-color: var(--vscode-focusBorder);
+			}
+			button { 
+				background: var(--vscode-button-background); 
+				color: var(--vscode-button-foreground); 
+				border: none; 
+				cursor: pointer; 
+				padding: 10px 14px; 
+				font-weight: bold; 
+				margin-top: 10px; 
+				align-self: flex-start;
+			}
+			button:hover { 
+				background: var(--vscode-button-hoverBackground); 
+			}
+			.form-group { 
+				display: flex; 
+				flex-direction: column; 
+			}
+			.desc { 
+				font-size: 12px; 
+				color: var(--vscode-descriptionForeground); 
+				margin-top: 6px; 
+			}
+			.slider-container { 
+				display: flex; 
+				align-items: center; 
+				gap: 15px; 
+			}
+			input[type="range"] {
+				flex-grow: 1;
+				accent-color: var(--vscode-button-background);
+			}
+			#noiseVal { 
+				width: 70px; 
+				text-align: center; 
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h2>Quantum Error Correction (QEC)</h2>
+			<div class="desc" style="margin-top: 0;">Configure parameters to transform the active QASM circuit.</div>
+			
+			<div class="form-group">
+				<label for="qecCode">QEC Code</label>
+				<select id="qecCode">
+					<option value="steane">Steane (7-qubit)</option>
+					<option value="surface_d3" selected>Surface (d=3)</option>
+					<option value="surface_d5">Surface (d=5)</option>
+					<option value="repetition">Repetition</option>
+				</select>
+				<div class="desc">Select the error correction code geometry to apply to your circuit.</div>
+			</div>
 
-		const newDoc = await vscode.workspace.openTextDocument({
-			content: transformedContent,
-			language: outputSelection.id === "dem" ? "plaintext" : "qasm"
-		});
-		vscode.window.showTextDocument(newDoc);
-		vscode.window.showInformationMessage(`QASM transformed using QEC (${codeSelection.label}).`);
-  } catch (err: any) {
-    vscode.window.showErrorMessage("Transform failed: " + err.message);
-  }
+			<div class="form-group">
+				<label for="outputType">Output Type</label>
+				<select id="outputType">
+					<option value="physical_circuit">Physical Circuit (QASM)</option>
+					<option value="dem" selected>Detector Error Model (DEM)</option>
+				</select>
+				<div class="desc">Choose whether to output the physical circuit with ancillas or the raw Stim error model (DEM) for decoders.</div>
+			</div>
+
+			<div class="form-group">
+				<label for="noiseProb">Noise Probability (Depolarization)</label>
+				<div class="slider-container">
+					<input type="range" id="noiseSlider" min="0" max="0.1" step="0.001" value="0.001">
+					<input type="number" id="noiseVal" value="0.001" min="0" max="1" step="0.001">
+				</div>
+				<div class="desc">The depolarizing error rate applied to physical gates. DEM generation requires > 0.</div>
+			</div>
+
+			<button id="submitBtn">Transform Circuit</button>
+		</div>
+
+		<script>
+			const vscode = acquireVsCodeApi();
+			
+			const slider = document.getElementById('noiseSlider');
+			const input = document.getElementById('noiseVal');
+			
+			slider.addEventListener('input', () => input.value = slider.value);
+			input.addEventListener('input', () => slider.value = input.value);
+
+			document.getElementById('submitBtn').addEventListener('click', () => {
+				const qecCode = document.getElementById('qecCode').value;
+				const outputType = document.getElementById('outputType').value;
+				const noiseProb = parseFloat(input.value) || 0;
+
+				vscode.postMessage({
+					command: 'submit',
+					qec_code: qecCode,
+					output_type: outputType,
+					noise_prob: noiseProb
+				});
+			});
+		</script>
+	</body>
+	</html>
+	`;
 }
 
 
