@@ -15,18 +15,6 @@ type NodeRow = {
 
 const API_BASE = "https://quantum.quantag-it.com/api";
 
-function statusToText(status?: number, statusStr?: string | null): string {
-  if (statusStr && String(statusStr).trim().length > 0) {
-    return String(statusStr);
-  }
-
-  switch (Number(status)) {
-    case 1: return "running";
-    case 0: return "offline";
-    default: return "unknown";
-  }
-}
-
 function parseCaps(caps: any): any {
   if (!caps) {
     return null;

@@ -23,7 +23,13 @@
 		"preserveConstEnums": true,
 		"strictNullChecks": true,
 		"noUnusedParameters": false,
-		"esModuleInterop": true 
+		"esModuleInterop": true,
+		/* google-auth-library pulls in gaxios, whose .d.ts references
+		   undici-types, a package it does not depend on. Skipping
+		   declaration-file checking avoids failing the build on a
+		   third-party typing gap; it does not affect checking of our
+		   own sources. */
+		"skipLibCheck": true
 	},
 	"exclude": [
 		"node_modules",

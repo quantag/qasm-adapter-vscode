@@ -363,7 +363,6 @@ export async function getHtml(sessionId: string) {
 }
 
 async function  showQirInNewTab(qirText: string) {
-    const fileName = 'qir_output.ll'; // Optional: gives a nicer syntax highlight if filetype known
     const doc = await vscode.workspace.openTextDocument({
         content: qirText,
         language: 'llvm'  // or 'plaintext' if unsure
