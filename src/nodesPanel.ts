@@ -47,30 +47,6 @@ function parseCaps(caps: any): any {
   return caps;
 }
 
-function getGpuModel(caps: any): string {
-  const parsed = parseCaps(caps);
-  if (parsed && typeof parsed === "object" && parsed.gpu) {
-    return String(parsed.gpu.model || "");
-  }
-  return "";
-}
-
-function getCpuModel(caps: any): string {
-  const parsed = parseCaps(caps);
-  if (parsed && typeof parsed === "object" && parsed.cpu) {
-    return String(parsed.cpu.model || "");
-  }
-  return "";
-}
-
-function getRamMb(caps: any): number | string {
-  const parsed = parseCaps(caps);
-  if (parsed && typeof parsed === "object" && parsed.ram && parsed.ram.total_mb != null) {
-    return parsed.ram.total_mb;
-  }
-  return "";
-}
-
 async function fetchNodes(_apikey: string): Promise<NodeRow[]> {
   const url = `${API_BASE}/nodes`;
 
@@ -104,13 +80,6 @@ async function fetchNodes(_apikey: string): Promise<NodeRow[]> {
     caps: parseCaps(r.caps)
   }));
 }
-
-function toPercent(v) {
-  const n = Number(v);
-  if (!isFinite(n)) return "-";
-  return (n * 100).toFixed(2) + "%";
-}
-
 
 async function fetchNodeStatus(uid: string): Promise<any> {
   const url = `${API_BASE}/nodes/${encodeURIComponent(uid)}/status`;

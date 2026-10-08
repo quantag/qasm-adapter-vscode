@@ -27,10 +27,6 @@ export function log(message) {
   logger.appendLine(formatMilliseconds(new Date()) + " " + message);
 }
 
-export function logQIR(message) {
-  qirOutput.appendLine(message);
-}
-
 export function parseJwt(token: string): any {
     try {
         const payload = token.split('.')[1];
@@ -180,27 +176,6 @@ export function showImage64(data: string) {
       showHtml(src, "Quantum Circuit");
 }
 
-export function showQUA64(data: string) {
-  var src = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-      <style>
-          img {
-              max-width: 100%;
-              max-height: 100%;
-          }
-      </style>
-  </head>
-  <body>
-      <xmp>${data}</xmp>
-  </body>
-  </html>
-`
-    // Set the HTML content of the webview to display the image
-    showHtml(src, "QUA");
-}
-
 export function showHtml(src: string, title: string) {
     const panel = vscode.window.createWebviewPanel(
       'imageViewer',
@@ -276,10 +251,6 @@ export async function readConfig(): Promise<any> {
   return JSON.parse(raw);
 }
 
-
-export function openJobsDashboard() {
-  vscode.env.openExternal(vscode.Uri.parse("https://cloud.quantag-it.com/jobs"));
-}
 
 export async function submitJobGeneral(srcData: string, filename: string) {
   try {
@@ -366,39 +337,6 @@ export async function submitJobGeneral(srcData: string, filename: string) {
 }
 
 
-export async function runZISimulator(srcData: string) {
-  var srcDataBase64 = btoa(srcData);
-  const payload = {
-    src: srcDataBase64
-  };
-  try {
-    const endpoint = Config["zi.run"];
-    log("Sending request to " + endpoint);
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'}
-    });
-
-    if (!response.ok) {
-       log("reponse is not ok: " + response.status + " - " + response.statusText);
-    }
-
-    const responseData = await response.json();
-    var respStatus = responseData.status;
-    if(respStatus==2) {
-      log("Error: " + responseData.err);
-    }
-    if(respStatus==0) {
-      var decodedRes = atob(responseData.res);
-      log("Result: " + decodedRes);
-    }
-
-  } catch (error) {
-      log("Error :" + error);
-  }
-}
-
 export async function getHtml(sessionId: string) {
   const payload = {
     file: sessionId + ".html"
@@ -422,11 +360,6 @@ export async function getHtml(sessionId: string) {
   } catch (error) {
       log("Error get image:" + error);
   }
-}
-
-export async function openCircuitWeb(sessionId: string) {
-		// 	open browser pointing to web frontend
-		vscode.env.openExternal(vscode.Uri.parse(Config["circuit.web"] + sessionId));
 }
 
 async function  showQirInNewTab(qirText: string) {
@@ -472,9 +405,5 @@ export async function QASMtoQIR(srcData: string) {
 
 export async function showJobsPanel() {
   await vscode.commands.executeCommand('quantag.studio.viewJobs');
-}
-
-export async function showNodesPanel() {
-  await vscode.commands.executeCommand('quantag.studio.viewNodes');
 }
 

@@ -893,39 +893,6 @@ function getWebviewVisualizerHtml(context: vscode.ExtensionContext, panel: vscod
 
 
 
-function getActiveQasmText(): string | undefined {
-	log("getActiveQasmText");
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) {return;}
-	log("getActiveQasmText 1");
-	const document = editor.document;
-	if (document.languageId !== 'openqasm') {return;}
-	log("getActiveQasmText 2");
-	return document.getText();
-}
-
-async function transpileQasm(apiBaseUrl: string, qasm: string, backend: string): Promise<any> {
-  const qasmB64 = Buffer.from(qasm, 'utf-8').toString('base64');
-
-  const response = await fetch(`${apiBaseUrl}/transpile`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      qasm_b64: qasmB64,
-      backend: backend,
-      opt: 3
-    })
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Transpile failed: ${response.status}: ${text}`);
-  }
-
-  return await response.json();
-}
-
-
 async function authWithGoogle(context: vscode.ExtensionContext) {
 	const loginToken = crypto.randomUUID(); // или shortid или base64
 
@@ -1098,7 +1065,6 @@ async function sleep(ms) {
 
 
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
-	private server?: Net.Server;
 	private config: any;
 
 	private debugServerName: string  = "node3.quantag-it.com";
@@ -1164,14 +1130,11 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 	}
 
 	async createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
-		if (!this.server) {
-			// start listening on a random port
-			this.server = Net.createServer(socket => {
-				const session = new MockDebugSession(workspaceFileAccessor);
-				session.setRunAsServer(true);
-				session.start(socket as NodeJS.ReadableStream, socket);
-			}).listen(0);
-		}
+		// This factory returns a DebugAdapterServer pointing at the remote
+		// quantum debug server, so no local adapter is started here. A local
+		// Net.createServer(...).listen(0) used to be opened at this point and
+		// was never connected to by anything: it leaked a listening socket on
+		// every debug session.
 
 		this.loadConfig();
 		// Write to output.
@@ -1195,9 +1158,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 	}
 
 	dispose() {
-		if (this.server) {
-			this.server.close();
-		}
+		// Nothing to dispose: this factory owns no local resources.
 	}
 }
 

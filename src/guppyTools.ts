@@ -31,21 +31,6 @@ export function getConfig(): GuppyConfig {
   };
 }
 
-// Utility: fetch with timeout
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit,
-  timeoutMs: number
-): Promise<Response> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(id);
-  }
-}
-
 // Detect functions from backend
 export async function detectFromBackend(
   source: string,
