@@ -230,7 +230,53 @@ export function showHtmlInExternalBrowser(htmlData: string) {
     vscode.env.openExternal(vscode.Uri.file(tempFilePath));
 }
 
+// Folder where a local QSCore (for example in a Quantag Studio workspace) saves
+// circuit images and HTML renders: <dir>/<sessionId>.png and <dir>/<sessionId>.html.
+const LOCAL_ARTIFACTS_DIR = "/var/dap/images";
+
+// Returns the artifacts folder when config.json points the debugger to QSCore
+// on this machine; then images are read from disk instead of the cloud file service.
+async function getLocalArtifactsDir(): Promise<string | undefined> {
+  try {
+    const cfg = await readConfig();
+    const server = String(cfg?.debug?.server ?? "");
+    const host = server.split(":")[0].trim().toLowerCase();
+    if (host === "127.0.0.1" || host === "localhost") {
+      return String(cfg?.debug?.artifacts || LOCAL_ARTIFACTS_DIR);
+    }
+  } catch (error) {
+    log("Could not read config.json: " + error);
+  }
+  return undefined;
+}
+
+// Reads <dir>/<sessionId><ext> written by the local QSCore. Returns undefined if not found.
+async function readLocalArtifact(dir: string, sessionId: string, ext: string): Promise<Buffer | undefined> {
+  if (!/^[A-Za-z0-9._-]+$/.test(sessionId || "")) {
+    log("Unexpected session id: " + sessionId);
+    return undefined;
+  }
+  const file = path.join(dir, sessionId + ext);
+  try {
+    return await fsPromises.readFile(file);
+  } catch (error) {
+    log("Local file not found: " + file);
+    return undefined;
+  }
+}
+
 export async function getImage(sessionId: string) {
+  const localDir = await getLocalArtifactsDir();
+  if (localDir) {
+    const data = await readLocalArtifact(localDir, sessionId, ".png");
+    if (data) {
+      showImage64(data.toString("base64"));
+    } else {
+      vscode.window.showWarningMessage("Circuit image is not available yet. Start a debug session first.");
+    }
+    return;
+  }
+
   const payload = {
     sessionId: sessionId
   };
@@ -400,6 +446,17 @@ export async function runZISimulator(srcData: string) {
 }
 
 export async function getHtml(sessionId: string) {
+  const localDir = await getLocalArtifactsDir();
+  if (localDir) {
+    const data = await readLocalArtifact(localDir, sessionId, ".html");
+    if (data) {
+      showHtmlInExternalBrowser(data.toString("utf8"));
+    } else {
+      vscode.window.showWarningMessage("Circuit HTML is not available yet. Start a debug session first.");
+    }
+    return;
+  }
+
   const payload = {
     file: sessionId + ".html"
   };

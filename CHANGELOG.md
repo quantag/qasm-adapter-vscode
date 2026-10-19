@@ -1,3 +1,6 @@
+# 1.0.37
+* Circuit image and HTML are read from local disk (/var/dap/images) when config.json points debug.server to 127.0.0.1 or localhost (Quantag Studio workspaces)
+
 # 1.0.36
 * Added QEC Circuit Transform interactive form
 
