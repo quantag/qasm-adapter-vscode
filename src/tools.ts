@@ -60,9 +60,9 @@ async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFol
   log("getAllFilesInFolder " + folderPath);
   const files = await fsPromises.readdir(folderPath);
 
-  // Filter files with .qasm or .py extension
+  // Filter files with .qasm, .py or .cpp (CUDA-Q C++) extension
   const qasmFiles = files.filter(file =>
-    (path.extname(file) === '.qasm' || path.extname(file) === '.py')
+    (path.extname(file) === '.qasm' || path.extname(file) === '.py' || path.extname(file) === '.cpp')
   );
 
   for (const file of qasmFiles) {

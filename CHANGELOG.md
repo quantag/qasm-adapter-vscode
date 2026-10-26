@@ -1,3 +1,6 @@
+# 1.0.38
+* CUDA-Q C++ debugging: Debug/Run buttons and breakpoints for C++ files (.cpp with `#include <cudaq.h>` or `__qpu__`). The kernel is translated to OpenQASM by QSCore (Quantag Studio workspaces with the CUDA-Q C++ toolchain)
+
 # 1.0.37
 * Circuit image and HTML are read from local disk (/var/dap/images) when config.json points debug.server to 127.0.0.1 or localhost (Quantag Studio workspaces)
 

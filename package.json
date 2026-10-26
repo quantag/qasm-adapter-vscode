@@ -1,7 +1,7 @@
 {
   "name": "openqasm-debug",
   "displayName": "OpenQASM Debugger",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
   "author": {
@@ -13,7 +13,8 @@
     "tket",
     "cuda-q",
     "qasm",
-    "python"
+    "python",
+    "c++"
   ],
   "engines": {
     "vscode": "^1.66.0"
@@ -130,6 +131,16 @@
           "command": "extension.mock-debug.submitEditorContents",
           "when": "resourceLangId == python",
           "group": "navigation@2"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == cpp",
+          "group": "navigation@0"
+        },
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == cpp",
+          "group": "navigation@1"
         }
       ],
       "commandPalette": [
@@ -163,6 +174,14 @@
         {
           "command": "extension.mock-debug.getCircuitHtml",
           "when": "resourceLangId == python"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == cpp"
+        },
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == cpp"
         },
         {
           "command": "extension.mock-debug.QASMtoQIR",
@@ -304,6 +323,9 @@
       },
       {
         "language": "python"
+      },
+      {
+        "language": "cpp"
       }
     ],
     "languages": [
@@ -343,7 +365,8 @@
         "type": "mock",
         "languages": [
           "openqasm",
-          "python"
+          "python",
+          "cpp"
         ],
         "label": "OpenQASM Debug",
         "program": "./out/debugAdapter.js",
