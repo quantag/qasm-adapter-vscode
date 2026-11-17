@@ -1,6 +1,6 @@
-# OpenQASM debugger extension
+# Quantag Studio — Quantum Debugger & Toolkit for VS Code
 
-This extension allows debugging of quantum program written in OpenQASM or one of python frameworks - [Qiskit](https://www.ibm.com/quantum/qiskit) or [TKET](https://www.quantinuum.com/developers/tket).
+**Quantag Studio** (by Quantag IT Solutions GmbH) allows debugging, transpiling, optimizing, and visualizing quantum programs written in **OpenQASM**, **Qiskit**, **pyTKET**, **Quantinuum Guppy**, and **NVIDIA CUDA-Q** (Python and C++).
 
 **OpenQASM** debugger connects to remote Quantum Virtual Machine ( [QVM](https://github.com/quantag/qdb-qscore) ) using [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol).
 

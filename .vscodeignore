@@ -1,5 +1,6 @@
 .vscode/**/*
 .gitignore
+.eslintrc.json
 .travis.yml
 appveyor.yml
 src/**/*
@@ -12,3 +13,6 @@ tsconfig.json
 out
 sampleWebWorkerWorkspace
 sampleWorkspace
+pserver/**/*
+pserver
+ThirdPartyNotices.txt

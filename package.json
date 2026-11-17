@@ -1,14 +1,15 @@
 {
   "name": "openqasm-debug",
-  "displayName": "OpenQASM Debugger",
-  "version": "1.0.38",
+  "displayName": "Quantag Studio",
+  "version": "1.0.39",
   "publisher": "QuantagITSolutionsGmbH",
-  "description": "Extension for OpenQASM, Qiskit, pyTKET and CUDA-Q debug adapters for VS Code.",
+  "description": "Quantag Studio: Quantum circuit debugger, compiler, and visualizer for OpenQASM, Qiskit, pyTKET, Guppy, and CUDA-Q.",
   "author": {
     "name": "Quantag IT Solutions GmbH"
   },
   "license": "MIT",
   "keywords": [
+    "quantag",
     "qiskit",
     "tket",
     "cuda-q",
@@ -19,10 +20,9 @@
   "engines": {
     "vscode": "^1.66.0"
   },
-  "icon": "images/openqasm-debug-icon.png",
+  "icon": "images/quantag-studio-icon.png",
   "categories": [
-    "Debuggers",
-    "Language Packs"
+    "Debuggers"
   ],
   "private": false,
   "repository": {
