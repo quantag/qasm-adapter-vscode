@@ -1,3 +1,6 @@
+# 1.0.40
+* Command **Quantag Studio: Show Compiled OpenQASM** (Command Palette): opens the Disassembly view with the OpenQASM compiled from the Python or C++ file; the current QASM instruction is highlighted and stepping moves through the source and the QASM together. Without a debug session it starts debugging the active file first (needs QSCore with source lines for the Disassembly view)
+
 # 1.0.39
 * Rebranded extension display name to **Quantag Studio** with a dedicated Quantag Studio icon and updated documentation.
 
