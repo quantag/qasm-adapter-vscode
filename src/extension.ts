@@ -1036,8 +1036,6 @@ function updateLoginStatusBar(context: vscode.ExtensionContext) {
         context.secrets.get("remoteAuthToken"),
         context.secrets.get("internalUserId")
     ]).then(([token, userId]) => {
-        console.log("Got token from secrets:", token);
-        console.log("Got internalUserId from secrets:", userId);
 
         let email: string | null = null;
 
