@@ -1,7 +1,7 @@
 {
-  "name": "openqasm-debug",
+  "name": "quantag-studio",
   "displayName": "Quantag Studio",
-  "version": "1.0.39",
+  "version": "1.0.40",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Quantag Studio: Quantum circuit debugger, compiler, and visualizer for OpenQASM, Qiskit, pyTKET, Guppy, and CUDA-Q.",
   "author": {
@@ -145,6 +145,10 @@
       ],
       "commandPalette": [
         {
+          "command": "quantagStudio.showCompiledQasm",
+          "when": "resourceLangId == python || resourceLangId == cpp || resourceLangId == openqasm || debugType == 'mock'"
+        },
+        {
           "command": "extension.mock-debug.debugEditorContents",
           "when": "resourceLangId == openqasm"
         },
@@ -208,6 +212,11 @@
       ]
     },
     "commands": [
+      {
+        "command": "quantagStudio.showCompiledQasm",
+        "title": "Show Compiled OpenQASM",
+        "category": "Quantag Studio"
+      },
       {
         "command": "extension.mock-debug.debugEditorContents",
         "title": "Debug Circuit",

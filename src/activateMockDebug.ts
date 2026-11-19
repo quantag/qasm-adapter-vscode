@@ -116,6 +116,8 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 		})
 	);
 
+	registerShowCompiledQasm(context);
+
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.getProgramName', config => {
 		return vscode.window.showInputBox({
 			placeHolder: "Please enter the name of a markdown file in the workspace folder",
@@ -268,4 +270,56 @@ class InlineDebugAdapterFactory implements vscode.DebugAdapterDescriptorFactory 
 	createDebugAdapterDescriptor(_session: vscode.DebugSession): ProviderResult<vscode.DebugAdapterDescriptor> {
 		return new vscode.DebugAdapterInlineImplementation(new MockDebugSession(workspaceFileAccessor));
 	}
+}
+
+/*
+ * "Show Compiled OpenQASM": opens the VS Code Disassembly view of the paused debug session.
+ * QSCore lists the OpenQASM that runs (compiled from Python or C++) as the instructions,
+ * with the source line of every instruction, so the view highlights the current QASM
+ * instruction and stepping moves through the source file and the QASM together.
+ * Without a debug session the command starts debugging the active file (it stops on entry)
+ * and opens the view at the first stop.
+ */
+function registerShowCompiledQasm(context: vscode.ExtensionContext) {
+	const openDisassembly = () => vscode.commands.executeCommand('debug.action.openDisassemblyView');
+	let openOnNextStop = false;
+
+	context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('mock', {
+		createDebugAdapterTracker(_session: vscode.DebugSession) {
+			return {
+				onDidSendMessage: (message: any) => {
+					if (openOnNextStop && message && message.type === 'event' && message.event === 'stopped') {
+						openOnNextStop = false;
+						// let VS Code load the stack frame (instruction pointer) first
+						setTimeout(openDisassembly, 300);
+					}
+				},
+				onExit: () => { openOnNextStop = false; }
+			};
+		}
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('quantagStudio.showCompiledQasm', async (resource?: vscode.Uri) => {
+		const session = vscode.debug.activeDebugSession;
+		if (session && session.type === 'mock') {
+			await openDisassembly();
+			return;
+		}
+		const target = resource || vscode.window.activeTextEditor?.document.uri;
+		if (!target) {
+			vscode.window.showInformationMessage('Open a Python, C++ or OpenQASM file to show its compiled OpenQASM.');
+			return;
+		}
+		openOnNextStop = true;
+		const started = await vscode.debug.startDebugging(undefined, {
+			type: 'mock',
+			name: 'Debug File',
+			request: 'launch',
+			program: target.fsPath,
+			stopOnEntry: true
+		});
+		if (!started) {
+			openOnNextStop = false;
+		}
+	}));
 }
