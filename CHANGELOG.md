@@ -1,3 +1,8 @@
+# 1.0.41
+* Desktop: only the program and what it needs are uploaded to the debugger, not the whole workspace: the program, its local imports and includes (recursively, inside its project root) and the data files listed in `config.json` `files`. `.gitignore`, `exclude` and the usual build and environment folders are respected; limits of 200 files and 10 MB. See "Which files are uploaded" in the README
+* Desktop: the session waits for the upload; if it fails or is over the limits, the session does not start and the reason is shown
+* The launch configuration carries `projectRoot` and `programRelative`; QSCore 1.0.28 finds the program by it and runs Python from the project root (local imports and relative data paths work)
+
 # 1.0.40
 * Published as a new Marketplace extension **QuantagITSolutionsGmbH.quantag-studio** (package name `quantag-studio`, was `openqasm-debug`); commands, settings and the debugger type are unchanged
 * The auth token and the user ID are no longer written to the extension log

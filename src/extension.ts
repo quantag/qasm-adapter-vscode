@@ -10,7 +10,8 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MockDebugSession } from './mockDebug';
 import { activateMockDebug, setSessionID, workspaceFileAccessor } from './activateMockDebug';
-import {submitFiles, log, parseJwt, readConfig} from './tools';
+import {log, parseJwt, readConfig} from './tools';
+import { programLocation, uploadProjectFiles } from './upload';
 import { getUserID, RemoteFileSystemProvider, setUserID } from './remoteFileSystemProvider';
 import { openNodesPanel } from './nodesPanel';
 
@@ -52,6 +53,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Set a custom context key (true if running in Desktop)
 	vscode.commands.executeCommand('setContext', 'quantag.isDesktop', !isWeb);
+
+	// Desktop: the program's project root and its path from there go into the launch
+	// configuration; the files are uploaded relative to the root and QSCore finds the
+	// program by programRelative
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('mock', {
+		resolveDebugConfigurationWithSubstitutedVariables(_folder, config) {
+			if (!isWeb && typeof config.program === 'string' && !config.programRelative) {
+				const location = programLocation(config.program);
+				if (location) {
+					config.projectRoot = location.projectRoot;
+					config.programRelative = location.programRelative;
+				}
+			}
+			return config;
+		}
+	}));
 
 	// debug adapters can be run in different ways by using a vscode.DebugAdapterDescriptorFactory:
 	switch (runMode) {
@@ -1088,11 +1105,6 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 	}
 }
 
-async function sleep(ms) {
-	return new Promise((resolve) => {
-	  setTimeout(resolve, ms);
-	});
-  }
 
 
 class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
@@ -1174,18 +1186,24 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		this.loadConfig();
 		// Write to output.
 		log("Starting OpenQASM debugging session..");
-		const version = vscode.extensions.getExtension('QuantagITSolutionsGmbH.openqasm-debug')?.packageJSON.version
+		const version = vscode.extensions.getExtension('QuantagITSolutionsGmbH.quantag-studio')?.packageJSON.version
 		log("Extension version: v" + version);
 
-		if(vscode.workspace.workspaceFolders !== undefined) {
-			let workplaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
-			log("workplaceFolder: " + workplaceFolder);
+		setSessionID(session.id);
+		log("SessionId: " + session.id + ", UserID: " + getUserID());
 
-			setSessionID(session.id);
-			log("SessionId: "+ session.id) + ", UserID: "+ getUserID();
-	
-			submitFiles(workplaceFolder, session.id, workplaceFolder);
-			await sleep(1500);
+		if (vscode.env.uiKind === vscode.UIKind.Web) {
+			// Studio workspace: the debugger runs next to the files and reads them in place
+			log("Web mode: nothing is uploaded");
+		} else {
+			// Desktop: upload the program, its local dependencies and its data files; a
+			// failed upload stops the session (VS Code shows the error)
+			try {
+				await uploadProjectFiles(session.id, session.configuration.program, session.configuration.projectRoot);
+			} catch (error: any) {
+				log("Debug session not started: " + (error?.message ?? error));
+				throw error;
+			}
 		}
 
 		log("Starting quantum debug session with "+this.debugServerName+":"+this.debugServerPort);

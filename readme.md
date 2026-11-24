@@ -82,6 +82,26 @@ Open .qasm file and execute command *Optimize QASM with PyZX* from Command Palet
 * From the editor's "Run and Debug" toolbar dropdown menu select "Debug Circuit"
 * From Command Pallete choose 'Quantag Studio: Render Circuit' to visualize circuit in new tab.
 
+## Which files are uploaded (VS Code desktop)
+
+On VS Code desktop the debugger runs on the Quantag server, so before a debug or run session the extension uploads the program to it. Only the program and what it needs are uploaded, not the whole workspace:
+
+* **Project root:** the nearest folder above the program with `config.json`, `requirements.txt` or `pyproject.toml` (not above the workspace folder); without one, the program's folder. Paths on the server are relative to it, and the program runs with the project root as its working directory.
+* **Local dependencies,** followed recursively inside the project root: Python imports (from the program's folder and the project root, relative imports, the `__init__.py` of each package), C++ `#include "..."` and OpenQASM `include "..."`. Installed packages (qiskit, numpy, ...) are not uploaded: they are on the server.
+* **Data files** the program reads: list them in `files` in the project root's `config.json`, as globs relative to the project root. `exclude` removes files from the upload; the project's `.gitignore` applies to `files`.
+
+```
+{
+  "files": ["data/**", "params.json"],
+  "exclude": ["data/raw/**"]
+}
+```
+
+* Never uploaded: `node_modules`, `.git`, `.venv`, `venv`, `__pycache__`, `dist`, `build`.
+* Limits: 200 files and 10 MB per session. Over a limit the session does not start and the message says how to narrow the upload. The uploaded files are listed in the **OpenQASM** output channel.
+
+In Quantag Studio workspaces (VS Code in the browser) nothing is uploaded: the debugger reads the files in place.
+
 ## Configuration (optional)
 
 If workplace contains file __config.json__ it is trated as configuration.

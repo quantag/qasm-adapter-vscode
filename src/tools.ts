@@ -7,9 +7,7 @@ const logger = vscode.window.createOutputChannel("OpenQASM");
 const fs = require('fs');
 const qirOutput = vscode.window.createOutputChannel("QIR");
 
-function base64Encode(data: string): string {
-  return Buffer.from(data).toString('base64');
-}
+
 
 function formatMilliseconds(date: Date): string {
 	const day = String(date.getDate()).padStart(2, '0');
@@ -42,122 +40,6 @@ export function parseJwt(token: string): any {
     }
 }
 
-
-async function getDirectories(folderPath) {
-  var result: string[] = []; 
-  const files = await fsPromises.readdir(folderPath);
-  for (const item of files) {
-      const itemPath = path.join(folderPath, item);
-      let stats = fs.statSync(itemPath);
-      if(stats.isDirectory()) {
-          result.push(itemPath);
-      }
-  }
-  return result;
-}
-
-async function getAllFilesInFolder(folderPath: string, filesData: any[], rootFolder: string) {
-  log("getAllFilesInFolder " + folderPath);
-  const files = await fsPromises.readdir(folderPath);
-
-  // Filter files with .qasm, .py or .cpp (CUDA-Q C++) extension
-  const qasmFiles = files.filter(file =>
-    (path.extname(file) === '.qasm' || path.extname(file) === '.py' || path.extname(file) === '.cpp')
-  );
-
-  for (const file of qasmFiles) {
-    const filePath = path.join(folderPath, file);
-
-    // Read file contents
-    const fileContents = await fsPromises.readFile(filePath, 'utf-8');
-
-    // Encode file contents in base64
-    const encodedContents = base64Encode(fileContents);
-
-    // Compute relative path from rootFolder
-    const relPath = path.relative(rootFolder, filePath).replace(/\\/g, "/");
-
-    // Add file details to the array
-    filesData.push({
-      path: relPath,
-      source: encodedContents,
-    });
-  }
-
-  const subFolders = await getDirectories(folderPath);
-  log("Found " + subFolders.length + " subfolders in " + folderPath);
-
-  for (const sub of subFolders) {
-    await getAllFilesInFolder(sub, filesData, rootFolder);
-  }
-
-  return filesData;
-}
-
-type SubmitOpts = {
-  mode?: "desktop" | "web";
-  baseUrl?: string; // QUANTAG_BASE_URL, e.g. "https://cloud.quantag-it.com"
-};
-
-export async function submitFiles(folderPath: string, sessionId: string, rootFolder: string) {
-    const filesData: { path: string; source: string }[] = [];
-
-    const mode: "desktop" | "web" = vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop";
-    log(mode === "web" ? "== Web mode ==" : "== Desktop mode ==");
-    const baseUrl = process.env.QUANTAG_BASE_URL;
-    if (baseUrl) {
-        log("Running with QUANTAG_BASE_URL=" + baseUrl);
-    } else {
-        log("No QUANTAG_BASE_URL");
-    }
-
-    if(mode==="web") {
-      log("Skipping file submit for web mode");
-      return;
-    }
-
-    // Build SubmitOpts object
-    const opts: SubmitOpts = {
-      mode,
-      baseUrl: baseUrl ?? undefined
-    };
-    await getAllFilesInFolder(folderPath, filesData, rootFolder);
-
-      // Prepare the JSON payload
-    const payload = {
-        sessionId: sessionId,
-        files: filesData,
-        root: rootFolder,
-        opts 
-    };
-    log("Sumbiting ["+ filesData.length+"] workplace files to cloud.. SessionId = " + sessionId );
-
-    try {
-      var serverUrl = Config["submit.files"];
-      if (vscode.env.uiKind === vscode.UIKind.Web && baseUrl) {
-            const normalized = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-            serverUrl = `${normalized}/api2/public/submitFiles`;
-            log("Overriding server URL to: " + serverUrl);
-      }
-
-      const response = await fetch(serverUrl, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {'Content-Type': 'application/json; charset=UTF-8'}
-      });
-
-    if (!response.ok) {
-       log("reponse is not ok");
-       throw new Error(`Failed to submit files: ${response.status} - ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    log(JSON.stringify(responseData, null, 2)); // Log the JSON data with indentation for better readability
-
-  } catch (error) {
-      log("Error submitting files:" + error);
-  }
-}
 
 export function showImage64(data: string) {
     var src = `
