@@ -1,7 +1,7 @@
 {
   "name": "quantag-studio",
   "displayName": "Quantag Studio",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Quantag Studio: Quantum circuit debugger, compiler, and visualizer for OpenQASM, Qiskit, pyTKET, Guppy, and CUDA-Q.",
   "author": {
@@ -45,7 +45,8 @@
     "publish": "vsce publish",
     "publish-pre-release": "vsce publish --pre-release",
     "vscode:prepublish": "rimraf dist && npm run -S esbuild-base -- --minify && npm run -S esbuild-web -- --minify",
-    "test": "npm run typecheck"
+    "test": "npm run typecheck",
+    "test:files": "esbuild ./src/tests/projectFiles.test.ts --bundle --platform=node --external:mocha --outfile=out/tests/projectFiles.test.js && mocha out/tests/projectFiles.test.js"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -271,7 +272,6 @@
         "category": "Quantag Studio",
         "title": "Optimize with BQSKit"
       },
-      
       {
         "command": "remoteFiles.openRemote",
         "category": "Quantag Studio",
@@ -484,6 +484,8 @@
   },
   "dependencies": {
     "google-auth-library": "^10.2.1",
+    "ignore": "^5.3.2",
+    "minimatch": "^9.0.5",
     "node-fetch": "^2.7.0"
   }
 }

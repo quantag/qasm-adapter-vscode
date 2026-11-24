@@ -1,0 +1,8 @@
+{
+  "files": [
+    "data/**"
+  ],
+  "exclude": [
+    "data/raw/**"
+  ]
+}
