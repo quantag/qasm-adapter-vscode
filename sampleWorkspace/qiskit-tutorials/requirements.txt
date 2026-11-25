@@ -1,0 +1,4 @@
+qiskit==1.3.2
+qiskit-aer
+scipy
+numpy
