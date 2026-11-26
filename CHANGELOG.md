@@ -1,3 +1,6 @@
+# 1.0.42
+* README: the samples link points to the public Samples page of Quantag Studio (https://studio.quantag-it.com/samples), where the samples can be browsed and downloaded
+
 # 1.0.41
 * Desktop: only the program and what it needs are uploaded to the debugger, not the whole workspace: the program, its local imports and includes (recursively, inside its project root) and the data files listed in `config.json` `files`. `.gitignore`, `exclude` and the usual build and environment folders are respected; limits of 200 files and 10 MB. See "Which files are uploaded" in the README
 * Desktop: the session waits for the upload; if it fails or is over the limits, the session does not start and the reason is shown

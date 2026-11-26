@@ -1,7 +1,7 @@
 {
   "name": "quantag-studio",
   "displayName": "Quantag Studio",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "publisher": "QuantagITSolutionsGmbH",
   "description": "Quantag Studio: Quantum circuit debugger, compiler, and visualizer for OpenQASM, Qiskit, pyTKET, Guppy, and CUDA-Q.",
   "author": {

@@ -31,7 +31,7 @@ Support of [nVidia CUDA-Q](https://developer.nvidia.com/cuda-q) kernels
 More information about quantum debugger adapter can be found
 [here](https://quantum.quantag-it.com/).
 
-Samples can be downloaded from [here](https://quantag-it.com/pub/qdb/qasm-samples.zip).
+Samples can be downloaded from [here](https://studio.quantag-it.com/samples).
 
 Extension versions in .vsix can be downloaded from [here](https://quantag-it.com/pub/qdb/versions/)
 
